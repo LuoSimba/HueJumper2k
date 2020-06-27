@@ -1,11 +1,10 @@
-
-
-    
-'use strict';                        // strict mode
+'use strict';
     
 // debug settings
 const debug = 0;                     // enable debug features
 const usePointerLock = 1;            // remove pointer lock for 2k build
+
+const c = document.getElementById('c'); // <canvas>
 
 // draw settings
 const context = c.getContext('2d');  // canvas 2d context
@@ -623,6 +622,7 @@ function SaveSnapshot()
     
 let lastFpsMS = 0;
 let averageFps = 0;
+
 function UpdateFps()
 {
     let ms = performance.now();
@@ -633,31 +633,43 @@ function UpdateFps()
     averageFps = averageFps*.9 + fps*.1;
     context.font='3em"';
     context.fillStyle='#0007';
-    context.fillText(averageFps|0,c.width-90,c.height-40);
+
+    context.fillText(averageFps|0,
+            c.width  - 90,
+            c.height - 40);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 // keyboard control
 /////////////////////////////////////////////////////////////////////////////////////
 
-let inputIsDown = [];
-let inputWasDown = [];
+let inputIsDown    = [];
+let inputWasDown   = [];
 let inputWasPushed = [];
-onkeydown = e => inputIsDown[e.keyCode] = 1;
-onkeyup   = e => inputIsDown[e.keyCode] = 0;
+
+
+/**
+ * 按下按键
+ */
+window.onkeydown = e => inputIsDown[e.keyCode] = 1;
+
+/**
+ * 释放按键
+ */
+window.onkeyup   = e => inputIsDown[e.keyCode] = 0;
+
+
 function UpdateInput()
 {
     inputWasPushed = inputIsDown.map((e,i) => e && !inputWasDown[i]);
     inputWasDown = inputIsDown.slice();
 }
-    
+
 /////////////////////////////////////////////////////////////////////////////////////
-// init hue jumper
+// init hue(color) jumper
 /////////////////////////////////////////////////////////////////////////////////////
    
 // startup and kick off update loop
 StartLevel();
 Update();
     
-
-

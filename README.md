@@ -6,21 +6,28 @@ By Frank Force 2019
 # [LIVE DEMO - 2K VERSION](https://killedbyapixel.github.io/HueJumper2k/a.htm)
 # [TECHNICAL EXPLANTION](http://frankforce.com/?p=7427)
 
-This entire game is a single html file, under 2k when zipped, made for 2kPlus Jam!
 
-This repository contains both the minified 2k code and a cleaned up version with some added features.
+
+整个游戏就是一个独立的 HTML 文件，
+under 2k when zipped, made for 2kPlus Jam!
+
+This repository contains both the minified 2k
+code and a cleaned up version with some added features.
 
 The a.htm file when zipped with advzip should be under 2k.
 
-## Controls
-* Mouse = Steer
-* Click = Brake
-* Double Click = Jump
-* R = Restart
-* 1 = Screenshot
+## 控制
+* 鼠标 = 方向控制
+* 点击 = 刹车
+* 双击 = 跳跃
+* R = 重新开始
+* 1 = 屏幕快照
 
-## How to Play
-The road is randomly generated and different every time. You start with 20 seconds, pass checkpoints to get 10 more seconds. Avoid rocks and trees by swerving or jumping over them. The road ends at 1000, good luck!
+## 怎么玩
+赛道是随机生成的，每次都不一样。
+You start with 20 seconds, pass checkpoints to get 10 more seconds.
+通过改变方向或跳跃来避免撞上岩石和树木。
+The road ends at 1000, 祝你好运!
 
 ## 2k Version Features
 * Retro style 3D rendering engine in full HD
