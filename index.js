@@ -130,6 +130,9 @@ function StartLevel()
     time = maxTime;                             // set the starting time
 }
     
+/**
+ * 最长的函数
+ */
 function Update()
 {
     // time regulation, in case running faster then 60 fps, though it causes judder REMOVE FROM MINFIED
@@ -426,39 +429,6 @@ function Update()
 }
     
 /////////////////////////////////////////////////////////////////////////////////////
-// touch control
-/////////////////////////////////////////////////////////////////////////////////////
-
-if (typeof ontouchend != 'undefined')
-{
-    let ProcessTouch = e =>
-    {
-        e.preventDefault();
-        mouseDown = !(e.touches.length > 0);
-        mouseWasPressed = 1;
-        touchMode = 1;
-        
-        if (mouseDown)
-            return;
-
-        // average all touch positions
-        let x = 0, y = 0;
-        for (let touch of e.touches)
-        {
-            x += touch.clientX;
-            y += touch.clientY;
-        }
-        mouseX = x/e.touches.length;
-        mouseX = mouseX/window.innerWidth*2-1
-    }
-
-    c.addEventListener('touchstart',  ProcessTouch, false);
-    c.addEventListener('touchmove',   ProcessTouch, false);
-    c.addEventListener('touchcancel', ProcessTouch, false);
-    c.addEventListener('touchend',    ProcessTouch, false);
-}
-    
-/////////////////////////////////////////////////////////////////////////////////////
 // DEBUG stuff
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -488,7 +458,7 @@ function UpdateDebugPost()
 {
     UpdateInput();
     
-    UpdateFps();
+    UpdateFps(context, 90, c.height - 40);
 
     if (true) // DEBUG
         return;

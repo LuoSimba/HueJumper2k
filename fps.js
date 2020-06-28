@@ -8,7 +8,6 @@
     
 
 
-// need global variable: c, context
 const UpdateFps = (function () {
 
     // private variables
@@ -18,7 +17,7 @@ const UpdateFps = (function () {
     /**
      * 显示帧率
      */
-    return function () {
+    return function (context, x, y) {
 
         let ms = performance.now();
         let deltaMS = ms - lastFpsMS;  // 读取与上一次测量的时间差
@@ -37,12 +36,12 @@ const UpdateFps = (function () {
         averageFps = averageFps*.9 + fps*.1;
 
         // 将平均帧率显示在屏幕的适当位置
+        context.save();
         context.font = '30px Sans';
         context.fillStyle = 'red';
-        context.fillText(
-                averageFps | 0, // 位运算，取整
-                90,
-                c.height - 40);
+        context.fillText(averageFps | 0, // 位运算，取整
+                x, y);
+        context.restore();
     };
 })();
 
