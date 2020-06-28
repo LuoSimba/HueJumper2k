@@ -156,8 +156,11 @@ function Update()
     lastUpdate = now;
     
     // start frame
-    if (snapshot) {c.width|0} else                                  // DEBUG REMOVE FROM MINFIED
+    if (false) { // screen-shot
+        c.width|0
+    } else {                                 // DEBUG REMOVE FROM MINFIED
         c.width = window.innerWidth,c.height = window.innerHeight;  // clear the screen and set size
+    }
     
     if (!c.width) // REMOVE FROM MINFIED
     {
@@ -512,7 +515,6 @@ if (typeof ontouchend != 'undefined')
 /////////////////////////////////////////////////////////////////////////////////////
 
 let debugPrintLines;
-let snapshot;
     
 function UpdateDebugPre()
 {
@@ -526,22 +528,16 @@ function UpdateDebugPre()
     
     if (inputWasPushed[49]) // 1 = screenshot
     {
-        snapshot = 1;
-        
         // use 1080p resolution
         c.width = 1920;
         c.height = 1080;
+
+        console.log('snapshot.png');
     }
 }
     
 function UpdateDebugPost()
 {
-    if (snapshot)
-    {
-        SaveSnapshot();
-        snapshot = 0;
-    }
-    
     UpdateInput();
     
     if (!debug)
@@ -570,13 +566,6 @@ function DebugPrint(text, color='#F00')
     debugPrintLines.push(line);
 }
     
-function SaveSnapshot()
-{    
-    downloadLink.download="snapshot.png";
-    downloadLink.href=c.toDataURL("image/jpg").replace("image/jpg", "image/octet-stream");
-    downloadLink.click();
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 // frame rate counter
 /////////////////////////////////////////////////////////////////////////////////////
