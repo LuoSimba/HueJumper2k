@@ -1,10 +1,23 @@
 'use strict';
 
+// global game variables
+let hueShift;                   // current hue shift for all hsl colors
+
 /////////////////////////////////////////////////////////////////////////////////////
 // math and helper functions
 /////////////////////////////////////////////////////////////////////////////////////
     
-const LSHA       = (l, s=0, h=0, a=1) =>`hsl(${ h + hueShift },${ s }%,${ l }%,${ a })`;
+/**
+ *
+ * hue 颜色 0-360
+ * s 0%-100%
+ * l 0%-100%
+ * alpha 透明度 （0-1）
+ */
+const LSHA = (l, s=0, h=0, alpha=1) => {
+    return `hsl(${ h + hueShift },${ s }%,${ l }%,${ alpha })`;
+};
+
 const Clamp      = (v, min, max)      => Math.min(Math.max(v, min), max);
 const ClampAngle = (a)                => (a+Math.PI) % (2*Math.PI) + (a+Math.PI<0? Math.PI : -Math.PI);
 const Lerp       = (p, a, b)          => a + Clamp(p, 0, 1) * (b-a);

@@ -54,7 +54,6 @@ let worldHeading;               // heading to turn skybox
 let randomSeed;                 // random seed for level
 let startRandomSeed;            // save the starting seed for active use
 let nextCheckPoint;             // distance of next checkpoint
-let hueShift;                   // current hue shift for all hsl colors
 let road;                       // the list of road segments
 let time;                       // time left before game over
 let lastUpdate = 0;             // time of last update
@@ -132,6 +131,8 @@ function StartLevel()
     
 /**
  * 最长的函数
+ *
+ * 是一个动画循环
  */
 function Update()
 {
@@ -158,9 +159,11 @@ function Update()
     
     // start frame
     if (false) { // screen-shot
-        c.width|0
+        c.width | 0;   // ???
     } else {                                 // DEBUG REMOVE FROM MINFIED
-        c.width = window.innerWidth,c.height = window.innerHeight;  // clear the screen and set size
+        // clear the screen and set size
+        c.width = window.innerWidth;
+        c.height = window.innerHeight;
     }
     
     if (!c.width) // REMOVE FROM MINFIED
@@ -169,8 +172,9 @@ function Update()
         requestAnimationFrame(Update);
         return;
     }
-    
-    if (usePointerLock && document.pointerLockElement !== c && !touchMode) // set mouse down if pointer lock released
+
+    // set mouse down if pointer lock released
+    if (usePointerLock && document.pointerLockElement !== c && !touchMode)
         mouseDown = 1; 
     
     UpdateDebugPre(); // DEBUG REMOVE FROM MINFIED
@@ -248,7 +252,7 @@ function Update()
     }
     
     /////////////////////////////////////////////////////////////////////////////////////
-    // draw background - sky, sun/moon, mountains, and horizon
+    // 绘制背景 - 天空，太阳/月亮, 群山, 和地平线
     /////////////////////////////////////////////////////////////////////////////////////
     
     // multi use local variables
@@ -262,12 +266,14 @@ function Update()
     const cameraHeading = playerTurnAmount * cameraHeadingScale;                                  // turn camera with player 
     const cameraOffset = Math.sin(cameraHeading)/2;                                               // apply heading with offset
     
-    // draw sky
+    // 绘制天空
     const lighting = Math.cos(worldHeading);                                    // brightness from sun
     const horizon = c.height/2 - Math.tan(playerPitch) * projectScale.y;        // get horizon line
-    const g = context.createLinearGradient(0,horizon-c.height/2,0,horizon);     // linear gradient for sky
-    g.addColorStop(0,LSHA(39+lighting*25,49+lighting*19,230-lighting*19));      // top sky color
-    g.addColorStop(1,LSHA(5,79,250-lighting*9));                                // bottom sky color
+
+    // 使用线性渐变作为天空的颜色
+    const g = context.createLinearGradient(0,horizon-c.height/2,0,horizon);
+    g.addColorStop( 0, LSHA(39+lighting*25,49+lighting*19,230-lighting*19));      // top sky color
+    g.addColorStop( 1, LSHA(5,79,250-lighting*9));                                // bottom sky color
     DrawPoly(c.width/2, 0, c.width/2, c.width/2, c.height, c.width/2, g);       // draw sky
     
     // draw sun and moon
@@ -421,11 +427,15 @@ function Update()
     }
     else
     {
-        context.textAlign = 'center';        // set center alignment for title
-        DrawText('HUE JUMPER', c.width/2);   // draw title text
+        context.font = '6em"';
+
+        context.fillStyle = LSHA(99,0,0,.5);
+
+        context.fillText('HELLO', 50, 100);
     }
     
-    requestAnimationFrame(Update);           // kick off next frame
+    // 开始下一帧
+    requestAnimationFrame(Update);
 }
     
 /////////////////////////////////////////////////////////////////////////////////////
