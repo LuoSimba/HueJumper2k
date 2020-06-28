@@ -1,7 +1,5 @@
 'use strict';
     
-// debug settings
-const debug = 0;                     // enable debug features
 const usePointerLock = 1;            // remove pointer lock for 2k build
 
 const c = document.getElementById('c'); // <canvas>
@@ -461,7 +459,7 @@ if (typeof ontouchend != 'undefined')
 }
     
 /////////////////////////////////////////////////////////////////////////////////////
-// debug stuff
+// DEBUG stuff
 /////////////////////////////////////////////////////////////////////////////////////
 
 let debugPrintLines;
@@ -490,10 +488,10 @@ function UpdateDebugPost()
 {
     UpdateInput();
     
-    if (!debug)
-        return;
-    
     UpdateFps();
+
+    if (true) // DEBUG
+        return;
     
     context.font='2em"';
     for (let i in debugPrintLines)
@@ -504,11 +502,11 @@ function UpdateDebugPost()
     }
 }
     
+/**
+ * DEBUG
+ */
 function DebugPrint(text, color='#F00')
 {
-    if (!debug)
-        return;
-    
     if (typeof text == 'object')
         text += JSON.stringify(text);
     
@@ -523,19 +521,29 @@ function DebugPrint(text, color='#F00')
 let lastFpsMS = 0;
 let averageFps = 0;
 
+/**
+ * 显示帧率
+ */
 function UpdateFps()
 {
     let ms = performance.now();
     let deltaMS = ms - lastFpsMS;
     lastFpsMS = ms;
     
-    let fps = 1/(deltaMS/1e3);
-    averageFps = averageFps*.9 + fps*.1;
-    context.font='3em"';
-    context.fillStyle='#0007';
+    // 先将时间间隔换算成秒
+    // 再取倒数，就是fps (frames per second)
+    //
+    // fps = frames / seconds
+    //     = 1 frame / delta
+    let fps = 1 / ( deltaMS/1000 );
 
-    context.fillText(averageFps|0,
-            c.width  - 90,
+    averageFps = averageFps*.9 + fps*.1;
+    context.font = '30px Sans';
+    context.fillStyle = 'red';
+
+    context.fillText(
+            averageFps | 0, // 位运算，取整
+            90,
             c.height - 40);
 }
 
