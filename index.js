@@ -438,19 +438,25 @@ let mouseX          = 0;
 let mouseLockX      = 0;
 let touchMode       = 0;
     
-onmouseup   = e => mouseDown = 0;
-onmousedown = e =>
-{
+/**
+ * 释放鼠标
+ */
+window.onmouseup   = e => mouseDown = 0;
+
+/**
+ * 按下鼠标
+ */
+window.onmousedown = e => {
+
     if (mouseWasPressed)
         mouseDown = 1;
     mouseWasPressed = 1;
     if (usePointerLock && e.button == 0 && document.pointerLockElement !== c)
     {
-        c.requestPointerLock = c.requestPointerLock || c.mozRequestPointerLock;
         c.requestPointerLock();
         mouseLockX = 0;
     }
-}
+};
 
 onmousemove = e => 
 {
