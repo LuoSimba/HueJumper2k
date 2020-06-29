@@ -37,7 +37,7 @@ const cameraHeadingScale = 2;        // scale of player turning to rotate camera
 const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
-const maxTime = 20;                  // time to start with
+const MAX_TIME = 20;                  // time to start with
 const checkPointTime = 10;           // how much time for getting to checkpoint
 const checkPointDistance = 1e5;      // how far between checkpoints
 const checkpointMaxDifficulty = 9;   // how many checkpoints before max difficulty
@@ -126,7 +126,7 @@ function StartLevel()
     playerPos = new Vector3(0, playerHeight);   // set player pos
     worldHeading = randomSeed;                  // randomize world heading
     nextCheckPoint = checkPointDistance;        // init next checkpoint
-    time = maxTime;                             // set the starting time
+    time = MAX_TIME;                             // set the starting time
 }
     
 /**
@@ -414,24 +414,49 @@ function Update()
         }
     }
     
-    UpdateDebugPost(); // DEBUG REMOVE FROM MINFIED
+    // UPDATE DEBUG POST
+    {
+        UpdateInput();
+        
+        UpdateFps();
+
+        if (false) // DEBUG
+        {
+            context.font='2em"';
+            for (let i in debugPrintLines)
+            {
+                let line = debugPrintLines[i];
+                context.fillStyle = line.color;
+                context.fillText(line.text,c.width/2,35+35*i);
+            }
+        }
+    }
     
     /////////////////////////////////////////////////////////////////////////////////////
     // draw and update time
     /////////////////////////////////////////////////////////////////////////////////////
     
+    context.save();
+    context.font = '2em"';
+    context.fillStyle = 'red';
+
+    // 显示平均帧率
+    {
+        let strText0 = `${averageFps | 0}fps`;
+        context.fillText(strText0, 9, 480);
+    }
+
     // 当鼠标按下时
     if (mouseWasPressed)
     {
-        context.font = '4em"';
-        context.fillStyle = "red";
-
-        let strTime = Math.ceil(time = Clamp(time - timeDelta, 0, maxTime)); // show and update time
+        time = Clamp(time - timeDelta, 0, MAX_TIME); // upate time
+        let strTime = Math.ceil(time); // show time
         let strDist = 0|playerPos.z/1000; // 显示路程
         let strText = `${strTime}s  ${strDist}m`;
 
         context.fillText(strText, 9, 109);
     }
+    context.restore();
     
     // 开始下一帧
     requestAnimationFrame(Update);
@@ -463,23 +488,6 @@ function UpdateDebugPre()
     }
 }
     
-function UpdateDebugPost()
-{
-    UpdateInput();
-    
-    UpdateFps(context, 90, c.height - 40);
-
-    if (true) // DEBUG
-        return;
-    
-    context.font='2em"';
-    for (let i in debugPrintLines)
-    {
-        let line = debugPrintLines[i];
-        context.fillStyle = line.color;
-        context.fillText(line.text,c.width/2,35+35*i);
-    }
-}
     
 /**
  * DEBUG
