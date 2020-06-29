@@ -1,7 +1,7 @@
 'use strict';
 
 // global game variables
-let hueShift;                   // current hue shift for all hsl colors
+let gHueShift;                   // current hue shift for all hsl colors
 
 /////////////////////////////////////////////////////////////////////////////////////
 // math and helper functions
@@ -17,7 +17,7 @@ let hueShift;                   // current hue shift for all hsl colors
  */
 const LSHA = (L, S=0, H=0, alpha=1) => {
 
-    const color = `hsl(${ H + hueShift },${ S }%,${ L }%,${ alpha })`;
+    const color = `hsl(${ H + gHueShift },${ S }%,${ L }%,${ alpha })`;
 
     return color;
 };

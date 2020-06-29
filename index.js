@@ -36,8 +36,7 @@ const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
 const MAX_TIME = 20;                  // time to start with
-const checkPointTime = 10;           // how much time for getting to checkpoint
-const checkPointDistance = 1e5;      // how far between checkpoints
+const CHECKPOINT_DISTANCE = 1e5;      // how far between checkpoints
 const checkpointMaxDifficulty = 9;   // how many checkpoints before max difficulty
 const roadEnd = 1e4;                 // how many sections until end of the road
     
@@ -72,7 +71,12 @@ function StartLevel()
     let roadGenWaveFrequencyY = 0;              // Y wave frequency
     let roadGenWaveScaleX = 0;                  // X wave amplitude (turn size)
     let roadGenWaveScaleY = 0;                  // Y wave amplitude (hill size)
-    startRandomSeed = randomSeed = Date.now();  // set random seed
+
+
+    // 初始化随机种子
+    startRandomSeed = randomSeed = Date.now();
+    console.log('random seed', randomSeed);
+
     road = [];                                  // clear list of road segments
     
     // generate the road
@@ -81,7 +85,7 @@ function StartLevel()
         if (roadGenSectionDistance++ > roadGenSectionDistanceMax)             // check for end of section
         {
             // calculate difficulty percent
-            const difficulty = Math.min(1, i*roadSegmentLength/checkPointDistance/checkpointMaxDifficulty); // difficulty
+            const difficulty = Math.min(1, i*roadSegmentLength/CHECKPOINT_DISTANCE/checkpointMaxDifficulty); // difficulty
             
             // randomize road settings
             roadGenWidth = roadWidth*Random(1-difficulty*.7, 3-2*difficulty);        // road width
@@ -120,11 +124,12 @@ function StartLevel()
         playerPitchSpring = 
         playerPitchSpringVelocity = 
         playerPitchRoad =  
-        hueShift = 0
+        gHueShift = 0
     );
     playerPos = new Vector3(0, playerHeight);   // set player pos
     worldHeading = randomSeed;                  // randomize world heading
-    nextCheckPoint = checkPointDistance;        // init next checkpoint
+    // 初始化下一个检查点
+    nextCheckPoint = CHECKPOINT_DISTANCE;
     // 初始化时间
     gTime = MAX_TIME;
 }
@@ -246,9 +251,12 @@ function Update()
     
     if (playerPos.z > nextCheckPoint)          // crossed checkpoint
     {
-        gTime += checkPointTime;                // 获得更多时间
-        nextCheckPoint += checkPointDistance;  // set next checkpoint
-        hueShift += 36;                        // shift hue
+        // 通过检查点，奖励时间
+        gTime += 10;
+        // 设置下一个检查点
+        nextCheckPoint += CHECKPOINT_DISTANCE;
+        // 色彩偏移
+        gHueShift += 36;
     }
     
     /////////////////////////////////////////////////////////////////////////////////////
@@ -369,7 +377,7 @@ function Update()
                 const z = (playerRoadSegment+i)*roadSegmentLength;                  // segment distance
                 DrawPoly(p1.x, p1.y, p1.z*segment1.w,                               // road top
                     p2.x, p2.y, p2.z*segment2.w,                                    // road bottom
-                    LSHA((z%checkPointDistance < 300 ? 70 : 7)+lighting)); // road color and checkpoint
+                    LSHA((z%CHECKPOINT_DISTANCE < 300 ? 70 : 7)+lighting)); // road color and checkpoint
                     
                 // dashed lines
                 if (segment1.w > 300)                                               // no dash lines if very thin
