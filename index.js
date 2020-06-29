@@ -1,7 +1,5 @@
 'use strict';
     
-const usePointerLock = 1;            // remove pointer lock for 2k build
-
 const c = document.getElementById('c'); // <canvas>
 
 // draw settings
@@ -175,7 +173,7 @@ function Update()
     }
 
     // set mouse down if pointer lock released
-    if (usePointerLock && document.pointerLockElement !== c && !touchMode)
+    if (document.pointerLockElement !== c && !touchMode) // NOTE: use pointer lock
         mouseDown = 1; 
     
     UpdateDebugPre(); // DEBUG REMOVE FROM MINFIED
@@ -414,11 +412,13 @@ function Update()
             }
         }
     }
+    // -------------------------- 绘制段到此结束
     
     // UPDATE DEBUG POST
     {
         UpdateInput();
         
+        // 计算帧率
         UpdateFps();
 
         if (false) // DEBUG
@@ -440,9 +440,6 @@ function Update()
         // 更新时间。控制时间的流逝
         gTime = Clamp(gTime - timeDelta, 0, MAX_TIME);
     }
-
-
-
 
     /////////////////////////////////////////////////////////////////////////////////////
     // 显示各项数据

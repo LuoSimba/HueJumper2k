@@ -14,17 +14,22 @@ function HUD (ctx) {
         let strText0 = `${averageFps | 0}fps`;
 
         // 显示平均帧率
-        ctx.fillText(strText0, 9, 480);
+        ctx.fillText(strText0, 9, 60);
     }
 
-    // 当鼠标按下时
-    if (IsGameStart)
     {
-        let strTime = Math.ceil(gTime); // 显示剩余时间
         let strDist = 0|playerPos.z/1000; // 显示路程
-        let strText = `${strTime}s  ${strDist}m`;
+        let strText1 = `${strDist}m`;
+        ctx.fillText(strText1, 9, 110);
+    }
 
-        ctx.fillText(strText, 9, 109);
+    {
+        // 就算游戏没有开始，也可以显示剩余时间
+        // 因为它是一个全局变量
+        let strTime = Math.ceil(gTime);
+        let strText = `${strTime}s`;
+
+        ctx.fillText(strText, 9, 160);
     }
 
     ctx.restore();

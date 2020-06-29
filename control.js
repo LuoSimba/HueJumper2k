@@ -30,7 +30,7 @@ window.onmousedown = e => {
     // 唯一更改：当鼠标按下时
     IsGameStart = 1;
 
-    if (usePointerLock && e.button == 0 && document.pointerLockElement !== c)
+    if (e.button == 0 && document.pointerLockElement !== c)
     {
         c.requestPointerLock();
         mouseLockX = 0;
@@ -38,8 +38,9 @@ window.onmousedown = e => {
 };
 
 window.onmousemove = e => {
-    if (!usePointerLock)
-    {
+
+    // NOTE: if not use pointer lock ? always FALSE
+    if (false) {
         mouseX = e.x/window.innerWidth*2-1
         return;
     }
