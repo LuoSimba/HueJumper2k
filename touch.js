@@ -15,7 +15,7 @@ if (typeof ontouchend != 'undefined') {
 
         e.preventDefault();
         mouseDown = !(e.touches.length > 0);
-        mouseWasPressed = 1;
+        IsGameStart = 1;
         touchMode = 1;
         
         if (mouseDown)

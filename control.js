@@ -6,7 +6,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 
 let mouseDown       = 0; 
-let mouseWasPressed = 0;
+let IsGameStart     = 0;
 let mouseUpFrames   = 0;
 let mouseX          = 0;
 let mouseLockX      = 0;
@@ -24,11 +24,11 @@ window.onmouseup = e => {
  */
 window.onmousedown = e => {
 
-    if (mouseWasPressed)
+    if (IsGameStart)
         mouseDown = 1;
 
     // 唯一更改：当鼠标按下时
-    mouseWasPressed = 1;
+    IsGameStart = 1;
 
     if (usePointerLock && e.button == 0 && document.pointerLockElement !== c)
     {

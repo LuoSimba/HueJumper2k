@@ -55,7 +55,7 @@ let randomSeed;                 // random seed for level
 let startRandomSeed;            // save the starting seed for active use
 let nextCheckPoint;             // distance of next checkpoint
 let road;                       // the list of road segments
-let time;                       // time left before game over
+let gTime;                       // time left before game over
 let lastUpdate = 0;             // time of last update
 let timeBuffer = 0;             // frame rate adjustment
 
@@ -126,7 +126,8 @@ function StartLevel()
     playerPos = new Vector3(0, playerHeight);   // set player pos
     worldHeading = randomSeed;                  // randomize world heading
     nextCheckPoint = checkPointDistance;        // init next checkpoint
-    time = MAX_TIME;                             // set the starting time
+    // 初始化时间
+    gTime = MAX_TIME;
 }
     
 /**
@@ -195,7 +196,7 @@ function Update()
     const playerVelocityLast = playerVelocity.Add(0);                      // save last velocity
     playerVelocity.y += gravity;                                           // gravity
     playerVelocity.x *= lateralDamping;                                    // apply lateral damping
-    playerVelocity.z = Math.max(0, time ? forwardDamping*playerVelocity.z : 0); // apply damping, prevent moving backwards
+    playerVelocity.z = Math.max(0, gTime ? forwardDamping*playerVelocity.z : 0); // apply damping, prevent moving backwards
     playerPos = playerPos.Add(playerVelocity);                             // add player velocity
     
     const playerTurnAmount = Lerp(playerVelocity.z/playerMaxSpeed, mouseX * playerTurnControl, 0); // turning
@@ -217,7 +218,7 @@ function Update()
 
         playerVelocity.z += 
             mouseDown? playerBrake :                                                // apply brake              
-            Lerp(playerVelocity.z/playerMaxSpeed, mouseWasPressed*playerAccel, 0);  // apply accel
+            Lerp(playerVelocity.z/playerMaxSpeed, IsGameStart*playerAccel, 0);  // apply accel
         
         if (Math.abs(playerPos.x) > road[playerRoadSegment].w)                      // check if off road
         {
@@ -227,7 +228,7 @@ function Update()
     }
   
     // update jump
-    if (playerAirFrame++<6 && mouseDown && mouseUpFrames && mouseUpFrames<9 && time)  // check for jump
+    if (playerAirFrame++<6 && mouseDown && mouseUpFrames && mouseUpFrames<9 && gTime)  // check for jump
     {
         playerVelocity.y += playerJumpSpeed;                                          // apply jump velocity
         playerAirFrame = 9;                                                           // prevent jumping again
@@ -246,7 +247,7 @@ function Update()
     
     if (playerPos.z > nextCheckPoint)          // crossed checkpoint
     {
-        time += checkPointTime;                // add more time
+        gTime += checkPointTime;                // 获得更多时间
         nextCheckPoint += checkPointDistance;  // set next checkpoint
         hueShift += 36;                        // shift hue
     }
@@ -433,30 +434,21 @@ function Update()
     }
     
     /////////////////////////////////////////////////////////////////////////////////////
-    // draw and update time
+    // update time
     /////////////////////////////////////////////////////////////////////////////////////
+    if (IsGameStart) {
+        // 更新时间。控制时间的流逝
+        gTime = Clamp(gTime - timeDelta, 0, MAX_TIME);
+    }
+
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // 显示各项数据
+    /////////////////////////////////////////////////////////////////////////////////////
+    HUD(context);
     
-    context.save();
-    context.font = '2em"';
-    context.fillStyle = 'red';
-
-    // 显示平均帧率
-    {
-        let strText0 = `${averageFps | 0}fps`;
-        context.fillText(strText0, 9, 480);
-    }
-
-    // 当鼠标按下时
-    if (mouseWasPressed)
-    {
-        time = Clamp(time - timeDelta, 0, MAX_TIME); // upate time
-        let strTime = Math.ceil(time); // show time
-        let strDist = 0|playerPos.z/1000; // 显示路程
-        let strText = `${strTime}s  ${strDist}m`;
-
-        context.fillText(strText, 9, 109);
-    }
-    context.restore();
     
     // 开始下一帧
     requestAnimationFrame(Update);
