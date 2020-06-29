@@ -420,11 +420,17 @@ function Update()
     // draw and update time
     /////////////////////////////////////////////////////////////////////////////////////
     
+    // 当鼠标按下时
     if (mouseWasPressed)
     {
-        DrawText(Math.ceil(time = Clamp(time - timeDelta, 0, maxTime)), 9); // show and update time
-        context.textAlign = 'right';                                        // set right alignment for distance
-        DrawText(0|playerPos.z/1e3, c.width-9);                             // show distance
+        context.font = '4em"';
+        context.fillStyle = "red";
+
+        let strTime = Math.ceil(time = Clamp(time - timeDelta, 0, maxTime)); // show and update time
+        let strDist = 0|playerPos.z/1000; // 显示路程
+        let strText = `${strTime}s  ${strDist}m`;
+
+        context.fillText(strText, 9, 109);
     }
     
     // 开始下一帧

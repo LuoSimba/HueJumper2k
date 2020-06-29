@@ -26,7 +26,10 @@ window.onmousedown = e => {
 
     if (mouseWasPressed)
         mouseDown = 1;
+
+    // 唯一更改：当鼠标按下时
     mouseWasPressed = 1;
+
     if (usePointerLock && e.button == 0 && document.pointerLockElement !== c)
     {
         c.requestPointerLock();
