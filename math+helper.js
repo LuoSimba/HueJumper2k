@@ -10,12 +10,15 @@ let hueShift;                   // current hue shift for all hsl colors
 /**
  *
  * hue 颜色 0-360
- * s 0%-100%
- * l 0%-100%
+ * S 0%-100%
+ * L 0%-100%
  * alpha 透明度 （0-1）
  */
-const LSHA = (l, s=0, h=0, alpha=1) => {
-    return `hsl(${ h + hueShift },${ s }%,${ l }%,${ alpha })`;
+const LSHA = (L, S=0, H=0, alpha=1) => {
+
+    const color = `hsl(${ H + hueShift },${ S }%,${ L }%,${ alpha })`;
+
+    return color;
 };
 
 const Clamp      = (v, min, max)      => Math.min(Math.max(v, min), max);

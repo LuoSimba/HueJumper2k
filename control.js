@@ -15,7 +15,9 @@ let touchMode       = 0;
 /**
  * 释放鼠标
  */
-window.onmouseup   = e => mouseDown = 0;
+window.onmouseup = e => {
+    mouseDown = 0;
+};
 
 /**
  * 按下鼠标

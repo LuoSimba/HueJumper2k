@@ -274,7 +274,8 @@ function Update()
     const g = context.createLinearGradient(0,horizon-c.height/2,0,horizon);
     g.addColorStop( 0, LSHA(39+lighting*25,49+lighting*19,230-lighting*19));      // top sky color
     g.addColorStop( 1, LSHA(5,79,250-lighting*9));                                // bottom sky color
-    DrawPoly(c.width/2, 0, c.width/2, c.width/2, c.height, c.width/2, g);       // draw sky
+    // draw sky
+    DrawPoly(c.width/2, 0, c.width/2, c.width/2, c.height, c.width/2, g);
     
     // draw sun and moon
     for( i = 2; i--; )                                                          // 0 is sun, 1 is moon
@@ -424,14 +425,6 @@ function Update()
         DrawText(Math.ceil(time = Clamp(time - timeDelta, 0, maxTime)), 9); // show and update time
         context.textAlign = 'right';                                        // set right alignment for distance
         DrawText(0|playerPos.z/1e3, c.width-9);                             // show distance
-    }
-    else
-    {
-        context.font = '6em"';
-
-        context.fillStyle = LSHA(99,0,0,.5);
-
-        context.fillText('HELLO', 50, 100);
     }
     
     // 开始下一帧
