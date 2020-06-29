@@ -57,6 +57,7 @@ let gTime;                       // time left before game over
 let lastUpdate = 0;             // time of last update
 let timeBuffer = 0;             // frame rate adjustment
 
+
 function StartLevel()
 { 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -274,7 +275,10 @@ function Update()
     g.addColorStop( 0, LSHA(39+lighting*25,49+lighting*19,230-lighting*19));      // top sky color
     g.addColorStop( 1, LSHA(5,79,250-lighting*9));                                // bottom sky color
     // draw sky
-    DrawPoly(c.width/2, 0, c.width/2, c.width/2, c.height, c.width/2, g);
+    DrawPoly(
+            c.width/2, 0, c.width/2,
+            c.width/2, c.height, c.width/2,
+            g);
     
     // draw sun and moon
     for( i = 2; i--; )                                                          // 0 is sun, 1 is moon

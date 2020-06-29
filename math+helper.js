@@ -52,7 +52,19 @@ const Lerp = (p, from, to) => {
     return from + (to - from) * p;
 };
 
-const Random = (max=1, min=0) => Lerp((Math.sin(++randomSeed)+1)*1e5%1, min, max);
+/**
+ * 随机函数
+ */
+const Random = (max=1, min=0) => {
+
+    randomSeed ++;
+
+    const a = Math.sin(randomSeed) + 1;
+
+    const v = a * 100000 % 1;
+
+    return Lerp(v, min, max);
+};
    
 // simple 3d vector class
 class Vector3 
@@ -62,16 +74,18 @@ class Vector3
 	Multiply(v) { v = isNaN(v) ? v : new Vector3(v,v,v); return new Vector3( this.x * v.x, this.y * v.y, this.z * v.z); }
 }
     
-// draw a trapazoid shaped poly
+/**
+ * 绘制不规则四边形
+ */
 function DrawPoly(x1, y1, w1, x2, y2, w2, fillStyle) 
 {
     context.beginPath(context.fillStyle = fillStyle);
+
     context.lineTo(x1-w1, y1|0);
     context.lineTo(x1+w1, y1|0);
     context.lineTo(x2+w2, y2|0);
     context.lineTo(x2-w2, y2|0);
+
     context.fill();
 }
-
-
 
