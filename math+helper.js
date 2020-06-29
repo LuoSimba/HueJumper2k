@@ -66,12 +66,31 @@ const Random = (max=1, min=0) => {
     return Lerp(v, min, max);
 };
    
-// simple 3d vector class
+/**
+ * simple 3d vector class
+ */
 class Vector3 
 {
-    constructor(x=0, y=0, z=0) { this.x = x; this.y = y; this.z = z }
-	Add(v)      { v = isNaN(v) ? v : new Vector3(v,v,v); return new Vector3( this.x + v.x, this.y + v.y, this.z + v.z); }
-	Multiply(v) { v = isNaN(v) ? v : new Vector3(v,v,v); return new Vector3( this.x * v.x, this.y * v.y, this.z * v.z); }
+    /**
+     * 坐标必须明确给出
+     */
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+	Add(v) {
+        v = isNaN(v) ? v : new Vector3(v,v,v);
+
+        return new Vector3( this.x + v.x, this.y + v.y, this.z + v.z);
+    }
+
+	Multiply(v) {
+        v = isNaN(v) ? v : new Vector3(v,v,v);
+
+        return new Vector3( this.x * v.x, this.y * v.y, this.z * v.z);
+    }
 }
     
 /**

@@ -32,6 +32,11 @@ function HUD (ctx) {
         ctx.fillText(strText, 9, 160);
     }
 
+    {
+        let str = `hue shift=${gHueShift}`;
+        ctx.fillText(str, 9, 210);
+    }
+
     ctx.restore();
 }
 

@@ -118,15 +118,15 @@ function StartLevel()
     // init game
     /////////////////////////////////////////////////////////////////////////////////////
      
-    // reset everything
-    playerVelocity = new Vector3
-    ( 
-        playerPitchSpring = 
-        playerPitchSpringVelocity = 
-        playerPitchRoad =  
-        gHueShift = 0
-    );
-    playerPos = new Vector3(0, playerHeight);   // set player pos
+    // 重置一切
+    playerPitchSpring         = 0;
+    playerPitchSpringVelocity = 0;
+    playerPitchRoad           = 0;
+    gHueShift                 = 0;
+
+    playerVelocity = new Vector3(0, 0, 0);
+
+    playerPos = new Vector3(0, playerHeight, 0);   // set player pos
     worldHeading = randomSeed;                  // randomize world heading
     // 初始化下一个检查点
     nextCheckPoint = CHECKPOINT_DISTANCE;
@@ -345,7 +345,7 @@ function Update()
         road[playerRoadSegment+i++].p =                 // set projected road point
             p.Multiply(new Vector3(z, z, 1))            // projection
             .Multiply(projectScale)                     // scale
-            .Add(new Vector3(c.width/2,c.height/2))     // center on canvas
+            .Add(new Vector3(c.width/2,c.height/2, 0))  // center on canvas
     }
     
     // draw the road segments
