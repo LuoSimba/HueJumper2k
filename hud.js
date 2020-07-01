@@ -5,35 +5,38 @@
  *
  * 不会更改数据本身
  */
-function HUD (ctx) {
+function HUD (ctx, objs = []) {
     ctx.save();
     ctx.font = '2em"';
     ctx.fillStyle = 'red';
 
-    {
-        let strText0 = `${averageFps | 0}fps`;
+    let y = 50;
 
-        // 显示平均帧率
-        ctx.fillText(strText0, 9, 60);
-    }
+    const print = text => {
+        ctx.fillText(text, 9, y);
 
-    {
-        let strDist = 0|playerPos.z/1000; // 显示路程
-        let strText1 = `${strDist}m`;
-        ctx.fillText(strText1, 9, 110);
-    }
+        y += 50;
+    };
 
-    {
-        // 就算游戏没有开始，也可以显示剩余时间
-        // 因为它是一个全局变量
-        let strTime = Math.ceil(gTime);
-        let strText = `${strTime}s`;
 
-        ctx.fillText(strText, 9, 160);
+    // 平均帧率
+    objs.push(`${averageFps |0}fps`);
+
+    // 路程
+    objs.push(`${0| playerPos.z/1000 }m`);
+
+    // 剩余时间
+    objs.push(`${ Math.ceil(gTime) }s`);
+
+
+    // 先显示传入的参数
+    for (let text of objs) {
+        if (typeof text === 'object')
+            text = JSON.stringify(text);
+
+        print(text);
     }
 
     ctx.restore();
 }
-
-
 

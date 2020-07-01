@@ -76,17 +76,26 @@ let inputWasPushed = [];
 /**
  * 按下按键
  */
-window.onkeydown = e => inputIsDown[e.keyCode] = 1;
+window.onkeydown = function (e) {
+
+    inputIsDown[e.keyCode] = 1;
+};
 
 /**
  * 释放按键
  */
-window.onkeyup   = e => inputIsDown[e.keyCode] = 0;
+window.onkeyup = function (e) {
+
+    inputIsDown[e.keyCode] = 0;
+};
 
 
 function UpdateInput()
 {
-    inputWasPushed = inputIsDown.map((e,i) => e && !inputWasDown[i]);
+    inputWasPushed = inputIsDown.map(
+            (e,i) => e && !inputWasDown[i]
+            );
+
     inputWasDown = inputIsDown.slice();
 }
 

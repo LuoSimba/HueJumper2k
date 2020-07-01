@@ -162,27 +162,33 @@ function Update()
     lastUpdate = now;
     
     // start frame
-    if (false) { // screen-shot
-        c.width | 0;   // ???
-    } else {                                 // DEBUG REMOVE FROM MINFIED
-        // 重新调整尺寸，清除画布
-        c.width  = window.innerWidth;
-        c.height = window.innerHeight;
-    }
+    // 重新调整尺寸，清除画布
+    c.width  = window.innerWidth;
+    c.height = window.innerHeight;
     
-    if (!c.width) // REMOVE FROM MINFIED
-    {
-        // fix bug on itch, wait for canvas before updating
-        requestAnimationFrame(Update);
-        return;
-    }
 
     // set mouse down if pointer lock released
     if (document.pointerLockElement !== c && !touchMode) // NOTE: use pointer lock
         mouseDown = 1; 
+
+
+
+    // update debug pre
+    {
+        if (inputWasPushed[82]) // R = restart
+        {
+            mouseLockX = 0;
+            StartLevel(); 
+        }
+
+        if (inputWasPushed[49]) // 1 = screenshot
+        {
+            console.log('snapshot.png');
+        }
+    }
     
-    UpdateDebugPre(); // DEBUG REMOVE FROM MINFIED
-    
+
+
     /////////////////////////////////////////////////////////////////////////////////////
     // update player - controls and physics
     /////////////////////////////////////////////////////////////////////////////////////
@@ -440,17 +446,6 @@ function Update()
         
         // 计算帧率
         UpdateFps();
-
-        if (false) // DEBUG
-        {
-            context.font='2em"';
-            for (let i in debugPrintLines)
-            {
-                let line = debugPrintLines[i];
-                context.fillStyle = line.color;
-                context.fillText(line.text,c.width/2,35+35*i);
-            }
-        }
     }
     
     /////////////////////////////////////////////////////////////////////////////////////
@@ -464,51 +459,15 @@ function Update()
     /////////////////////////////////////////////////////////////////////////////////////
     // 显示各项数据
     /////////////////////////////////////////////////////////////////////////////////////
-    HUD(context);
+    HUD(context, [playerVelocity]);
+
     
     
     // 开始下一帧
     requestAnimationFrame(Update);
 }
     
-/////////////////////////////////////////////////////////////////////////////////////
-// DEBUG stuff
-/////////////////////////////////////////////////////////////////////////////////////
-
-let debugPrintLines;
     
-function UpdateDebugPre()
-{
-    debugPrintLines = [];
-    
-    if (inputWasPushed[82]) // R = restart
-    {
-        mouseLockX = 0;
-        StartLevel(); 
-    }
-    
-    if (inputWasPushed[49]) // 1 = screenshot
-    {
-        // use 1080p resolution
-        c.width = 1920;
-        c.height = 1080;
-
-        console.log('snapshot.png');
-    }
-}
-    
-    
-/**
- * DEBUG
- */
-function DebugPrint(text, color='#F00')
-{
-    if (typeof text == 'object')
-        text += JSON.stringify(text);
-    
-    let line = {text:text, color:color};
-    debugPrintLines.push(line);
-}
     
 /////////////////////////////////////////////////////////////////////////////////////
 // init hue(color) jumper
