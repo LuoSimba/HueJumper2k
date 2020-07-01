@@ -1,7 +1,5 @@
 'use strict';
 
-// global game variables
-let gHueShift;                   // current hue shift for all hsl colors
 
 /////////////////////////////////////////////////////////////////////////////////////
 // math and helper functions
@@ -17,7 +15,7 @@ let gHueShift;                   // current hue shift for all hsl colors
  */
 const LSHA = (L, S=0, H=0, alpha=1) => {
 
-    const color = `hsl(${ H + gHueShift },${ S }%,${ L }%,${ alpha })`;
+    const color = `hsl(${ H },${ S }%,${ L }%,${ alpha })`;
 
     return color;
 };
@@ -95,16 +93,28 @@ class Vector3
     
 /**
  * 绘制不规则四边形
+ *
+ * y 总是取整
  */
-function DrawPoly(x1, y1, w1, x2, y2, w2, fillStyle) 
+function DrawPoly(x1, y1, w1, x2, y2, w2, color) 
 {
-    context.beginPath(context.fillStyle = fillStyle);
+    context.fillStyle = color;
 
-    context.lineTo(x1-w1, y1|0);
+    context.beginPath();
+    context.moveTo(x1-w1, y1|0);
     context.lineTo(x1+w1, y1|0);
     context.lineTo(x2+w2, y2|0);
     context.lineTo(x2-w2, y2|0);
 
+    context.fill();
+}
+
+function DrawRect(x, y, w, h, color) 
+{
+    context.fillStyle = color;
+
+    context.beginPath();
+    context.rect(x, y|0, w, h|0);
     context.fill();
 }
 

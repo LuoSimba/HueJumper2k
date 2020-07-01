@@ -122,7 +122,6 @@ function StartLevel()
     playerPitchSpring         = 0;
     playerPitchSpringVelocity = 0;
     playerPitchRoad           = 0;
-    gHueShift                 = 0;
 
     playerVelocity = new Vector3(0, 0, 0);
 
@@ -166,8 +165,8 @@ function Update()
     if (false) { // screen-shot
         c.width | 0;   // ???
     } else {                                 // DEBUG REMOVE FROM MINFIED
-        // clear the screen and set size
-        c.width = window.innerWidth;
+        // 重新调整尺寸，清除画布
+        c.width  = window.innerWidth;
         c.height = window.innerHeight;
     }
     
@@ -255,8 +254,6 @@ function Update()
         gTime += 10;
         // 设置下一个检查点
         nextCheckPoint += CHECKPOINT_DISTANCE;
-        // 色彩偏移
-        gHueShift += 36;
     }
     
     /////////////////////////////////////////////////////////////////////////////////////
@@ -282,12 +279,11 @@ function Update()
     const g = context.createLinearGradient(0,horizon-c.height/2,0,horizon);
     g.addColorStop( 0, LSHA(39+lighting*25,49+lighting*19,230-lighting*19));      // top sky color
     g.addColorStop( 1, LSHA(5,79,250-lighting*9));                                // bottom sky color
+
     // draw sky
-    DrawPoly(
-            c.width/2, 0, c.width/2,
-            c.width/2, c.height, c.width/2,
-            g);
+    DrawRect(0, 0, c.width, c.height, g);
     
+
     // draw sun and moon
     for( i = 2; i--; )                                                          // 0 is sun, 1 is moon
     {
@@ -300,7 +296,9 @@ function Update()
             x, y, i?c.width/23:c.width);                                        // sun end pos & size
         g.addColorStop(0, LSHA(i?70:99));                                       // sun start color
         g.addColorStop(1, LSHA(0,0,0,0));                                       // sun end color
-        DrawPoly(c.width/2, 0, c.width/2, c.width/2, c.height, c.width/2, g);   // draw sun
+
+        // draw sun
+        DrawRect(0, 0, c.width, c.height, g);
     }
 
     // draw mountains
@@ -308,18 +306,28 @@ function Update()
     {
         const angle = ClampAngle(worldHeading+Random(19));                      // mountain random angle
         const lighting = Math.cos(angle-worldHeading);                          // mountain lighting
+
+        // mountain x pos, move far away for wrap
+        x = c.width * (.5+Lerp(angle/Math.PI/2+.5, 4, -4)-cameraOffset);
+        // mountain base
+        y = horizon;
+        // mountain width 
+        w = Random(.2,.8)**2*c.width/2;
+
         DrawPoly(
-            x = c.width*(.5+Lerp(angle/Math.PI/2+.5, 4, -4)-cameraOffset),      // mountain x pos, move far away for wrap
-            y = horizon,                                                        // mountain base
-            w = Random(.2,.8)**2*c.width/2,                                     // mountain width
-            x+w*Random(-.5,.5),                                                 // random tip skew
-            y - Random(.5,.8)*w, 0,                                             // mountain height
-            LSHA(Random(15,25)+i/3-lighting*9,i/2+Random(19),Random(220,230))); // mountain color
+                x, y, w,
+                x+w*Random(-.5,.5),                                                 // random tip skew
+                y - Random(.5,.8)*w, 0,                                             // mountain height
+                LSHA(Random(15,25)+i/3-lighting*9,i/2+Random(19),Random(220,230))); // mountain color
     }
     
     // draw horizon
-    DrawPoly(c.width/2, horizon, c.width/2, c.width/2, c.height, c.width/2,     // horizon pos & size
-        LSHA(25, 30, 95));                                                      // horizon color
+    //  horizon pos & size
+    DrawRect(0, horizon, c.width, c.height - horizon, "#3d532d");
+
+    //requestAnimationFrame(Update);
+    //return;
+
     
     /////////////////////////////////////////////////////////////////////////////////////
     // draw road and objects
@@ -510,3 +518,4 @@ function DebugPrint(text, color='#F00')
 StartLevel();
 Update();
     
+
