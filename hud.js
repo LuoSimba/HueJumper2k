@@ -25,9 +25,6 @@ function HUD (ctx, objs = []) {
     // 路程
     objs.push(`${0| playerPos.z/1000 }m`);
 
-    // 剩余时间
-    objs.push(`${ Math.ceil(gTime) }s`);
-
 
     // 先显示传入的参数
     for (let text of objs) {

@@ -11,13 +11,11 @@ const roadWidth = 500;               // how wide is road
 const warningTrackWidth = 150;       // with of road plus warning track
 const dashLineWidth = 9;             // width of the dashed line in the road
 const maxPlayerX = 2e3;              // player can not move this far from center of road
-const mountainCount = 30;            // how many mountains are there
 const timeDelta = 1/60;              // inverse frame rate
 
 // player settings
-const playerHeight = 150;            // how high is player above ground
+const PLAYER_HEIGHT = 150;            // how high is player above ground
 const playerMaxSpeed = 300;          // limit max player speed
-const playerAccel = 1;               // player acceleration
 const playerBrake = -3;              // player acceleration when breaking
 const playerTurnControl = .2;        // player turning rate
 const playerJumpSpeed = 25;          // z speed added for jump
@@ -27,22 +25,21 @@ const pitchLerp = .1;                // speed that camera pitch changes
 const pitchSpringDamping = .9;       // dampen the pitch spring
 const elasticity = 1.2;              // bounce elasticity (2 is full bounce, 1 is none)
 const centrifugal = .002;            // how much to pull player on turns
-const forwardDamping = .999;         // dampen player z speed
-const lateralDamping = .7;           // dampen player x speed
-const offRoadDamping = .98;          // more damping when off road
-const gravity = -1;                  // gravity to apply in y axis
+
+
 const cameraHeadingScale = 2;        // scale of player turning to rotate camera
 const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
-const MAX_TIME = 20;                  // time to start with
 const CHECKPOINT_DISTANCE = 1e5;      // how far between checkpoints
 const checkpointMaxDifficulty = 9;   // how many checkpoints before max difficulty
 const roadEnd = 1e4;                 // how many sections until end of the road
     
 // global game variables  
 let playerPos;                  // player position 3d vector
+
 let playerVelocity;             // player velocity 3d vector
+
 let playerPitchSpring;          // spring for player pitch bounce
 let playerPitchSpringVelocity;  // velocity of pitch spring
 let playerPitchRoad;            // pitch of road, or 0 if player is in air
@@ -52,7 +49,6 @@ let randomSeed;                 // random seed for level
 let startRandomSeed;            // save the starting seed for active use
 let nextCheckPoint;             // distance of next checkpoint
 let road;                       // the list of road segments
-let gTime;                       // time left before game over
 let lastUpdate = 0;             // time of last update
 let timeBuffer = 0;             // frame rate adjustment
 
@@ -123,14 +119,15 @@ function StartLevel()
     playerPitchSpringVelocity = 0;
     playerPitchRoad           = 0;
 
+    // 初始速度
     playerVelocity = new Vector3(0, 0, 0);
 
-    playerPos = new Vector3(0, playerHeight, 0);   // set player pos
+    // set player pos
+    playerPos = new Vector3(0, PLAYER_HEIGHT, 0);
+
     worldHeading = randomSeed;                  // randomize world heading
     // 初始化下一个检查点
     nextCheckPoint = CHECKPOINT_DISTANCE;
-    // 初始化时间
-    gTime = MAX_TIME;
 }
     
 /**
@@ -199,13 +196,33 @@ function Update()
     
     // get lerped values between last and current road segment
     const playerRoadX = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].x, road[playerRoadSegment+1].x);
-    const playerRoadY = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].y, road[playerRoadSegment+1].y) + playerHeight;
+    const playerRoadY = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].y, road[playerRoadSegment+1].y) + PLAYER_HEIGHT;
     const roadPitch = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].a, road[playerRoadSegment+1].a);
     
     const playerVelocityLast = playerVelocity.Add(0);                      // save last velocity
-    playerVelocity.y += gravity;                                           // gravity
-    playerVelocity.x *= lateralDamping;                                    // apply lateral damping
-    playerVelocity.z = Math.max(0, gTime ? forwardDamping*playerVelocity.z : 0); // apply damping, prevent moving backwards
+
+
+    // 施加在 Y 轴上的重力
+    playerVelocity.y --;
+
+    // apply lateral 阻尼
+    // dampen player x speed
+    playerVelocity.x *= .7;
+
+
+    {
+        // apply 阻尼
+        // dampen player z speed
+        // forward damping
+        let aaa = playerVelocity.z * .999;
+
+        // 只须前进，不许倒退
+        if (aaa < 0)
+            aaa = 0;
+
+        playerVelocity.z = aaa;
+    }
+
     playerPos = playerPos.Add(playerVelocity);                             // add player velocity
     
     const playerTurnAmount = Lerp(playerVelocity.z/playerMaxSpeed, mouseX * playerTurnControl, 0); // turning
@@ -225,23 +242,32 @@ function Update()
                (Math.cos(roadPitch) * playerVelocity.y + Math.sin(roadPitch) * playerVelocity.z)) // dot of road and velocity
             .Add(playerVelocity);                                                                 // add velocity
 
-        playerVelocity.z += 
-            mouseDown? playerBrake :                                                // apply brake              
-            Lerp(playerVelocity.z/playerMaxSpeed, IsGameStart*playerAccel, 0);  // apply accel
+
+        if (mouseDown) {
+            playerVelocity.z += playerBrake;    // apply brake
+        } else {
+            playerVelocity.z += Lerp(playerVelocity.z/playerMaxSpeed, IsGameStart* 1, 0); // apply accel
+        }
+
         
         if (Math.abs(playerPos.x) > road[playerRoadSegment].w)                      // check if off road
         {
-            playerVelocity.z *= offRoadDamping;                                     // slow down when off road
-            playerPitchSpring += Math.sin(playerPos.z/99)**4/99;                    // bump when off road
+            // 离开道路时，车速降低
+            // 离开道路时，阻尼（damping）增大
+            playerVelocity.z *= .98;
+
+            // 离开道路时，颠簸行进
+            playerPitchSpring += Math.sin(playerPos.z/99) ** 4 / 99;
         }
     }
   
     // update jump
-    if (playerAirFrame++<6 && mouseDown && mouseUpFrames && mouseUpFrames<9 && gTime)  // check for jump
+    if (playerAirFrame++<6 && mouseDown && mouseUpFrames && mouseUpFrames<9)  // check for jump
     {
         playerVelocity.y += playerJumpSpeed;                                          // apply jump velocity
         playerAirFrame = 9;                                                           // prevent jumping again
     }
+
     mouseUpFrames = mouseDown? 0 : mouseUpFrames+1;                                   // update mouse up frames for double click
     const airPercent = (playerPos.y-playerRoadY)/99;                                  // calculate above ground percent
     playerPitchSpringVelocity += Lerp(airPercent,0,playerVelocity.y/4e4);             // pitch down with vertical velocity
@@ -256,8 +282,6 @@ function Update()
     
     if (playerPos.z > nextCheckPoint)          // crossed checkpoint
     {
-        // 通过检查点，奖励时间
-        gTime += 10;
         // 设置下一个检查点
         nextCheckPoint += CHECKPOINT_DISTANCE;
     }
@@ -307,8 +331,10 @@ function Update()
         DrawRect(0, 0, c.width, c.height, g);
     }
 
+
     // draw mountains
-    for( i = mountainCount; i--; )                                              // draw every mountain
+    // how many mountains are there
+    for( i = 30; i--; )                                              // draw every mountain
     {
         const angle = ClampAngle(worldHeading+Random(19));                      // mountain random angle
         const lighting = Math.cos(angle-worldHeading);                          // mountain lighting
@@ -413,7 +439,7 @@ function Update()
                 if (!segment1.h                                                  // prevent hitting the same object
                     && Math.abs(playerPos.x - x) < 200                           // x collision
                     && Math.abs(playerPos.z - z) < 200                           // z collision
-                    && playerPos.y-playerHeight < segment1.y+200+height)         // y collision + object height
+                    && playerPos.y- PLAYER_HEIGHT < segment1.y+200+height)         // y collision + object height
                 {
                     playerVelocity = playerVelocity.Multiply(segment1.h = playerCollisionSlow); // stop player and mark hit
                 }
@@ -441,25 +467,16 @@ function Update()
     // -------------------------- 绘制段到此结束
     
     // UPDATE DEBUG POST
-    {
-        UpdateInput();
-        
-        // 计算帧率
-        UpdateFps();
-    }
-    
-    /////////////////////////////////////////////////////////////////////////////////////
-    // update time
-    /////////////////////////////////////////////////////////////////////////////////////
-    if (IsGameStart) {
-        // 更新时间。控制时间的流逝
-        gTime = Clamp(gTime - timeDelta, 0, MAX_TIME);
-    }
+    UpdateInput();
 
+    // 计算帧率
+    UpdateFps();
+    
     /////////////////////////////////////////////////////////////////////////////////////
     // 显示各项数据
     /////////////////////////////////////////////////////////////////////////////////////
-    HUD(context, [playerVelocity]);
+    //HUD(context, [playerVelocity]);
+    HUD(context);
 
     
     
