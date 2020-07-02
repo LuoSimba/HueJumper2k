@@ -2,12 +2,14 @@
     
 const c = document.getElementById('c'); // <canvas>
 
+const CHECKPOINT_DISTANCE = 100000;  // how far between checkpoints
+
 // draw settings
 const context = c.getContext('2d');  // canvas 2d context
 const drawDistance = 800;            // how many road segments to draw in front of player
 const cameraDepth = 1;               // FOV of camera (1 / Math.tan((fieldOfView/2) * Math.PI/180))
 const roadSegmentLength = 100;       // length of each road segment
-const roadWidth = 500;               // how wide is road
+const ROAD_WIDTH = 500;               // how wide is road
 const warningTrackWidth = 150;       // with of road plus warning track
 const dashLineWidth = 9;             // width of the dashed line in the road
 const maxPlayerX = 2e3;              // player can not move this far from center of road
@@ -31,7 +33,6 @@ const cameraHeadingScale = 2;        // scale of player turning to rotate camera
 const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
-const CHECKPOINT_DISTANCE = 1e5;      // how far between checkpoints
 const checkpointMaxDifficulty = 9;   // how many checkpoints before max difficulty
 const roadEnd = 1e4;                 // how many sections until end of the road
     
@@ -47,7 +48,6 @@ let playerAirFrame;             // how many frames player has been in air
 let worldHeading;               // heading to turn skybox
 let randomSeed;                 // random seed for level
 let startRandomSeed;            // save the starting seed for active use
-let nextCheckPoint;             // distance of next checkpoint
 let road;                       // the list of road segments
 let lastUpdate = 0;             // time of last update
 let timeBuffer = 0;             // frame rate adjustment
@@ -60,7 +60,7 @@ function StartLevel()
     /////////////////////////////////////////////////////////////////////////////////////
 
     let roadGenSectionDistanceMax = 0;          // init end of section distance
-    let roadGenWidth = roadWidth;               // starting road width
+    let roadGenWidth = ROAD_WIDTH;               // starting road width
     let roadGenSectionDistance = 0;             // distance left for this section
     let roadGenTaper = 0;                       // length of taper
     let roadGenWaveFrequencyX = 0;              // X wave frequency 
@@ -81,10 +81,13 @@ function StartLevel()
         if (roadGenSectionDistance++ > roadGenSectionDistanceMax)             // check for end of section
         {
             // calculate difficulty percent
-            const difficulty = Math.min(1, i*roadSegmentLength/CHECKPOINT_DISTANCE/checkpointMaxDifficulty); // difficulty
+            const difficulty = Math.min(
+                    1,
+                    i*roadSegmentLength/CHECKPOINT_DISTANCE/checkpointMaxDifficulty
+                    ); // difficulty
             
             // randomize road settings
-            roadGenWidth = roadWidth*Random(1-difficulty*.7, 3-2*difficulty);        // road width
+            roadGenWidth = ROAD_WIDTH * Random(1-difficulty*.7, 3-2*difficulty);        // road width
             roadGenWaveFrequencyX = Random(Lerp(difficulty, .01, .02));              // X frequency
             roadGenWaveFrequencyY = Random(Lerp(difficulty, .01, .03));              // Y frequency
             roadGenWaveScaleX = i > roadEnd ? 0 : Random(Lerp(difficulty, .2, .6));  // X scale
@@ -126,8 +129,6 @@ function StartLevel()
     playerPos = new Vector3(0, PLAYER_HEIGHT, 0);
 
     worldHeading = randomSeed;                  // randomize world heading
-    // 初始化下一个检查点
-    nextCheckPoint = CHECKPOINT_DISTANCE;
 }
     
 /**
@@ -280,11 +281,6 @@ function Update()
     playerPitchRoad = Lerp(pitchLerp, playerPitchRoad, Lerp(airPercent,-roadPitch,0));// match pitch to road
     const playerPitch = playerPitchSpring + playerPitchRoad;                          // update player pitch
     
-    if (playerPos.z > nextCheckPoint)          // crossed checkpoint
-    {
-        // 设置下一个检查点
-        nextCheckPoint += CHECKPOINT_DISTANCE;
-    }
     
     /////////////////////////////////////////////////////////////////////////////////////
     // 绘制背景 - 天空，太阳/月亮, 群山, 和地平线
@@ -415,9 +411,16 @@ function Update()
                 
                 // road
                 const z = (playerRoadSegment+i)*roadSegmentLength;                  // segment distance
-                DrawPoly(p1.x, p1.y, p1.z*segment1.w,                               // road top
-                    p2.x, p2.y, p2.z*segment2.w,                                    // road bottom
-                    LSHA((z%CHECKPOINT_DISTANCE < 300 ? 70 : 7)+lighting)); // road color and checkpoint
+                // TODO delete z
+
+                {
+                    const color2 = `hsl(0, 0%, ${ 7 + lighting }%)`;
+
+                    DrawPoly(
+                            p1.x, p1.y, p1.z*segment1.w,      // road top
+                            p2.x, p2.y, p2.z*segment2.w,      // road bottom
+                            color2); 
+                }
                     
                 // dashed lines
                 if (segment1.w > 300)                                               // no dash lines if very thin
@@ -435,7 +438,7 @@ function Update()
                 // player object collision check
                 const z = (playerRoadSegment+i)*roadSegmentLength;               // segment distance
                 const height = (Random(2)|0) * 400;                              // object type & height
-                x = 2*roadWidth * Random(10,-10) * Random(9);                    // choose object pos
+                x = 2 * ROAD_WIDTH * Random(10,-10) * Random(9);                    // choose object pos
                 if (!segment1.h                                                  // prevent hitting the same object
                     && Math.abs(playerPos.x - x) < 200                           // x collision
                     && Math.abs(playerPos.z - z) < 200                           // z collision
