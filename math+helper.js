@@ -98,23 +98,23 @@ class Vector3
  */
 function DrawPoly(x1, y1, w1, x2, y2, w2, color) 
 {
-    context.fillStyle = color;
+    CTX.fillStyle = color;
 
-    context.beginPath();
-    context.moveTo(x1-w1, y1|0);
-    context.lineTo(x1+w1, y1|0);
-    context.lineTo(x2+w2, y2|0);
-    context.lineTo(x2-w2, y2|0);
+    CTX.beginPath();
+    CTX.moveTo(x1-w1, y1|0);
+    CTX.lineTo(x1+w1, y1|0);
+    CTX.lineTo(x2+w2, y2|0);
+    CTX.lineTo(x2-w2, y2|0);
 
-    context.fill();
+    CTX.fill();
 }
 
 function DrawRect(x, y, w, h, color) 
 {
-    context.fillStyle = color;
+    CTX.fillStyle = color;
 
-    context.beginPath();
-    context.rect(x, y|0, w, h|0);
-    context.fill();
+    CTX.beginPath();
+    CTX.rect(x, y|0, w, h|0);
+    CTX.fill();
 }
 

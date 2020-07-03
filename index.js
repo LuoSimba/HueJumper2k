@@ -2,10 +2,12 @@
     
 const c = document.getElementById('c'); // <canvas>
 
+const CAN = c;
+const CTX = CAN.getContext('2d');
+
 const CHECKPOINT_DISTANCE = 100000;  // how far between checkpoints
 
 // draw settings
-const context = c.getContext('2d');  // canvas 2d context
 const drawDistance = 800;            // how many road segments to draw in front of player
 const cameraDepth = 1;               // FOV of camera (1 / Math.tan((fieldOfView/2) * Math.PI/180))
 const roadSegmentLength = 100;       // length of each road segment
@@ -13,7 +15,7 @@ const ROAD_WIDTH = 500;               // how wide is road
 const warningTrackWidth = 150;       // with of road plus warning track
 const dashLineWidth = 9;             // width of the dashed line in the road
 const maxPlayerX = 2e3;              // player can not move this far from center of road
-const timeDelta = 1/60;              // inverse frame rate
+
 
 // player settings
 const PLAYER_HEIGHT = 150;            // how high is player above ground
@@ -29,7 +31,6 @@ const elasticity = 1.2;              // bounce elasticity (2 is full bounce, 1 i
 const centrifugal = .002;            // how much to pull player on turns
 
 
-const cameraHeadingScale = 2;        // scale of player turning to rotate camera
 const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
@@ -49,8 +50,6 @@ let worldHeading;               // heading to turn skybox
 let randomSeed;                 // random seed for level
 let startRandomSeed;            // save the starting seed for active use
 let road;                       // the list of road segments
-let lastUpdate = 0;             // time of last update
-let timeBuffer = 0;             // frame rate adjustment
 
 
 function StartLevel()
@@ -131,6 +130,11 @@ function StartLevel()
     worldHeading = randomSeed;                  // randomize world heading
 }
     
+// 上次执行 update 的时间
+let lastUpdate = 0;
+// frame rate adjustment
+let timeBuffer = 0;
+
 /**
  * 最长的函数
  *
@@ -138,27 +142,38 @@ function StartLevel()
  */
 function Update()
 {
-    // time regulation, in case running faster then 60 fps, though it causes judder REMOVE FROM MINFIED
+    // 防止帧率超过60帧
+    //
+    // 当下时刻
     const now = performance.now();
-    if (lastUpdate)
-    {
-        // limit to 60 fps
+
+    // 不是第一次执行
+    if (lastUpdate) {
+
+        // 计算和前一次的时间差
         const delta = now - lastUpdate;
+
+        // limit to 60 fps
         if (timeBuffer + delta < 0)
         {
-            // running fast
+            // 太快了，本次作废，请求下次执行
             requestAnimationFrame(Update);
             return;
         }
         
-        // update time buffer
-        timeBuffer += delta;
-        timeBuffer -= timeDelta * 1e3;
-        if (timeBuffer > timeDelta * 1e3)
-            timeBuffer = 0; // if running too slow
+        timeBuffer += (delta - 1000/30);
+
+        // if running too slow
+        //if (timeBuffer > 1000/30)
+        //{
+        //    timeBuffer = 0;
+        //}
     }
+
+    // 记住当下时刻，作为下次的参照
     lastUpdate = now;
     
+
     // start frame
     // 重新调整尺寸，清除画布
     c.width  = window.innerWidth;
@@ -192,13 +207,15 @@ function Update()
     /////////////////////////////////////////////////////////////////////////////////////
     
     // get player road segment
-    const playerRoadSegment = playerPos.z/roadSegmentLength|0;         // current player road segment 
+    const playerRoadSegment        = playerPos.z/roadSegmentLength|0;         // current player road segment 
     const playerRoadSegmentPercent = playerPos.z/roadSegmentLength%1;  // how far player is along current segment
     
     // get lerped values between last and current road segment
     const playerRoadX = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].x, road[playerRoadSegment+1].x);
+
     const playerRoadY = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].y, road[playerRoadSegment+1].y) + PLAYER_HEIGHT;
-    const roadPitch = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].a, road[playerRoadSegment+1].a);
+
+    const roadPitch   = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].a, road[playerRoadSegment+1].a);
     
     const playerVelocityLast = playerVelocity.Add(0);                      // save last velocity
 
@@ -227,9 +244,11 @@ function Update()
     playerPos = playerPos.Add(playerVelocity);                             // add player velocity
     
     const playerTurnAmount = Lerp(playerVelocity.z/playerMaxSpeed, mouseX * playerTurnControl, 0); // turning
+
     playerVelocity.x +=                                          // update x velocity
         playerVelocity.z * playerTurnAmount -                    // apply turn
         playerVelocity.z ** 2 * centrifugal * playerRoadX;       // apply centrifugal force
+
     playerPos.x = Clamp(playerPos.x, -maxPlayerX, maxPlayerX);   // limit player x position
     
     // check if on ground
@@ -294,15 +313,17 @@ function Update()
     
     // pre calculate projection scale, flip y because y+ is down on canvas
     const projectScale = (new Vector3(1, -1, 1)).Multiply(c.width/2/cameraDepth);                 // get projection scale
-    const cameraHeading = playerTurnAmount * cameraHeadingScale;                                  // turn camera with player 
-    const cameraOffset = Math.sin(cameraHeading)/2;                                               // apply heading with offset
+
+    // scale of player turning to rotate camera(camera heading scale) = 2
+    const cameraHeading = playerTurnAmount * 2;     // turn camera with player 
+    const cameraOffset = Math.sin(cameraHeading)/2;                  // apply heading with offset
     
     // 绘制天空
     const lighting = Math.cos(worldHeading);                                    // brightness from sun
     const horizon = c.height/2 - Math.tan(playerPitch) * projectScale.y;        // get horizon line
 
     // 使用线性渐变作为天空的颜色
-    const g = context.createLinearGradient(0,horizon-c.height/2,0,horizon);
+    const g = CTX.createLinearGradient(0,horizon-c.height/2,0,horizon);
     g.addColorStop( 0, LSHA(39+lighting*25,49+lighting*19,230-lighting*19));      // top sky color
     g.addColorStop( 1, LSHA(5,79,250-lighting*9));                                // bottom sky color
 
@@ -310,21 +331,41 @@ function Update()
     DrawRect(0, 0, c.width, c.height, g);
     
 
-    // draw sun and moon
-    for( i = 2; i--; )                                                          // 0 is sun, 1 is moon
     {
-        const g = context.createRadialGradient(                                 // radial gradient for sun
-            x = c.width*(.5+Lerp(                                               // angle 0 is center
-                (worldHeading/Math.PI/2+.5+i/2)%1,                              // sun angle percent 
-                4, -4)-cameraOffset),                                           // sun x pos, move far away for wrap
-            y = horizon - c.width/5,                                            // sun y pos
-            c.width/25,                                                         // sun size
-            x, y, i?c.width/23:c.width);                                        // sun end pos & size
-        g.addColorStop(0, LSHA(i?70:99));                                       // sun start color
-        g.addColorStop(1, LSHA(0,0,0,0));                                       // sun end color
+        // 绘制月亮
+        const x = CAN.width * (
+                    .5 + Lerp (      // angle 0 is center
+                        (worldHeading / Math.PI / 2 + .5 + 1 / 2) % 1,  // sun angle percent
+                        4, -4) - cameraOffset
+                ); // move far away for wrap
 
-        // draw sun
-        DrawRect(0, 0, c.width, c.height, g);
+        const y = horizon - CAN.width / 5;
+
+        const g = CTX.createRadialGradient(
+                x, y, CAN.width / 25,
+                x, y, CAN.width / 23);
+
+        g.addColorStop(0, "#b3b3b3");
+        g.addColorStop(1, "transparent");
+
+        DrawRect(0, 0, CAN.width, CAN.height, g);
+    }
+    {
+        // 绘制太阳
+        x = CAN.width * ( .5 + Lerp (      // angle 0 is center
+                    (worldHeading / Math.PI / 2 + .5 + 0 / 2) % 1,  // sun angle percent
+                    4, -4) - cameraOffset); // sun x pos, move far away for wrap
+
+        y = horizon - CAN.width / 5;     // sun y pos
+
+        const g = CTX.createRadialGradient(
+            x, y, CAN.width / 25,
+            x, y, CAN.width);
+
+        g.addColorStop(0, "#fcfcfc");
+        g.addColorStop(1, "transparent");
+
+        DrawRect(0, 0, CAN.width, CAN.height, g);
     }
 
 
@@ -423,11 +464,18 @@ function Update()
                 }
                     
                 // dashed lines
-                if (segment1.w > 300)                                               // no dash lines if very thin
-                    (playerRoadSegment+i)%9==0 && i < drawDistance/3 &&             // make dashes and skip if far out
-                        DrawPoly(p1.x, p1.y, p1.z*dashLineWidth,                    // dash lines top
-                        p2.x, p2.y, p2.z*dashLineWidth,                             // dash lines bottom
-                        LSHA(70+lighting));                                         // dash lines color
+                if ( (playerRoadSegment+i) % 9 == 0 )
+                {
+                    if (i < drawDistance/3) // make dashes and skip if far out
+                    {
+                        const color = LSHA(70 + lighting);
+
+                        DrawPoly(
+                                p1.x, p1.y, p1.z*dashLineWidth,        // dash lines top
+                                p2.x, p2.y, p2.z*dashLineWidth,        // dash lines bottom
+                                color);                                // dash lines color
+                    }
+                }
 
                 segment2 = segment1;                                                // prep for next segment
             }
@@ -478,8 +526,7 @@ function Update()
     /////////////////////////////////////////////////////////////////////////////////////
     // 显示各项数据
     /////////////////////////////////////////////////////////////////////////////////////
-    //HUD(context, [playerVelocity]);
-    HUD(context);
+    HUD(CTX);
 
     
     

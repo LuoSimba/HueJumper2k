@@ -5,7 +5,12 @@
  *
  * 不会更改数据本身
  */
-function HUD (ctx, objs = []) {
+function HUD (ctx) {
+
+    const objs = [];
+    //objs.push(playerVelocity);
+    objs.push(timeBuffer);
+
     ctx.save();
     ctx.font = '2em"';
     ctx.fillStyle = 'red';
