@@ -9,7 +9,8 @@ function HUD (ctx) {
 
     const objs = [];
     //objs.push(playerVelocity);
-    objs.push(timeBuffer);
+    //objs.push(timeBuffer);
+    objs.push(mouseLockX);
 
     ctx.save();
     ctx.font = '2em"';

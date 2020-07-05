@@ -4,6 +4,8 @@ const c = document.getElementById('c'); // <canvas>
 
 const CAN = c;
 const CTX = CAN.getContext('2d');
+const WIDTH  = 700;
+const HEIGHT = 600;
 
 const CHECKPOINT_DISTANCE = 100000;  // how far between checkpoints
 
@@ -161,13 +163,13 @@ function Update()
             return;
         }
         
-        timeBuffer += (delta - 1000/30);
+        timeBuffer += (delta - 1000/60);
 
         // if running too slow
-        //if (timeBuffer > 1000/30)
-        //{
-        //    timeBuffer = 0;
-        //}
+        if (timeBuffer > 1000/60)
+        {
+            timeBuffer = 0;
+        }
     }
 
     // 记住当下时刻，作为下次的参照
@@ -176,8 +178,8 @@ function Update()
 
     // start frame
     // 重新调整尺寸，清除画布
-    c.width  = window.innerWidth;
-    c.height = window.innerHeight;
+    c.width  = WIDTH;
+    c.height = HEIGHT;
     
 
     // set mouse down if pointer lock released

@@ -1,6 +1,22 @@
 'use strict';
 
 
+document.onpointerlockchange = function (e) {
+
+    if (document.pointerLockElement === CAN) {
+        console.log('pointer lock on <canvas>');
+        mouseLockX = 0;
+    } else {
+        console.log('exit pointer lock!');
+    }
+};
+
+document.onpointerlockerror = function (e) {
+    throw new Error('pointer lock error!');
+};
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////
 // mouse input
 /////////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +38,7 @@ window.onmouseup = e => {
 /**
  * 按下鼠标
  */
-window.onmousedown = e => {
+window.onmousedown = function (e) {
 
     if (IsGameStart)
         mouseDown = 1;
@@ -30,35 +46,55 @@ window.onmousedown = e => {
     // 唯一更改：当鼠标按下时
     IsGameStart = 1;
 
-    if (e.button == 0 && document.pointerLockElement !== c)
-    {
-        c.requestPointerLock();
-        mouseLockX = 0;
+
+    if (document.pointerLockElement !== CAN) {
+        CAN.requestPointerLock();
     }
 };
 
-window.onmousemove = e => {
+/**
+ * 鼠标移动
+ */
+window.onmousemove = function (e) {
 
-    // NOTE: if not use pointer lock ? always FALSE
-    if (false) {
-        mouseX = e.x/window.innerWidth*2-1
+    // 如果鼠标没有被画布锁定，则什么也不做
+    if (document.pointerLockElement !== CAN)
         return;
-    }
-    
-    if (document.pointerLockElement !== c)
-        return;
+
+    // aaa = clientX / w * 2 - 1
+
+    let aaa = e.clientX / window.innerWidth; // [0,1]
+    aaa *= 2;  // [0,2]
+    aaa -= 1;  // [-1,1]
+
+    const HALF = WIDTH / 2;
     
     // adjust for pointer lock 
+    // movementX: 与上一个鼠标移动事件相比，x轴的增量
     mouseLockX += e.movementX;
-    mouseLockX = Clamp(mouseLockX, -window.innerWidth/2,  window.innerWidth/2);
+    mouseLockX = Clamp(mouseLockX, -HALF, HALF);  // mouseLockX = [-HALF, HALF]
     
+    
+    const ratio = mouseLockX / HALF;  // ratio = [-1, 1]
+
+    // 得到绝对值
+    const uratio = Math.abs(ratio);  // uratio = [0, 1]
+
+    // 得到正负符号
+    const sss = Math.sign(ratio);
+
     // apply curve to input
     const inputCurve = 1.5;
-    mouseX = mouseLockX;
-    mouseX /= window.innerWidth/2;
-    mouseX = Math.sign(mouseX) * (1-(1-Math.abs(mouseX))**inputCurve);
+
+    mouseX = 1 - (1- uratio) ** inputCurve;
+
+    // 添加正负符号
+    mouseX = sss * mouseX;
+
     mouseX *= window.innerWidth/2;
+
     mouseX += window.innerWidth/2;
+
     mouseX = mouseX/window.innerWidth*2-1
 };
 

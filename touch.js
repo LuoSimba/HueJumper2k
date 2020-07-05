@@ -29,7 +29,7 @@ if (typeof ontouchend != 'undefined') {
             y += touch.clientY;
         }
         mouseX = x/e.touches.length;
-        mouseX = mouseX/window.innerWidth*2-1
+        mouseX = mouseX/window.innerWidth*2-1;   // XXX
     };
 
     c.addEventListener('touchstart',  ProcessTouch, false);

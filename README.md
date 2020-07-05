@@ -44,7 +44,6 @@ The road ends at 1000, 祝你好运!
 ## Enhanced Version Features
 * Pointer lock
 * Touch support
-* Screen shot button
 * Fps display option
 * Restart button
 
