@@ -10,6 +10,7 @@ function HUD (ctx) {
     const objs = [];
     //objs.push(playerVelocity);
     //objs.push(timeBuffer);
+    objs.push(mouseUpFrames);
 
     ctx.save();
     ctx.font = '2em"';
@@ -23,10 +24,14 @@ function HUD (ctx) {
         y += 50;
     };
 
+    // 本次游戏的随机种子
+    objs.push(`SEED: ${SEED}`);
     // 方向控制
     objs.push(`steer: ${gSteerX}`);
     // 刹车状态
     objs.push(gBreakOn ? 'break on' : 'break off');
+    // 是否在空中
+    objs.push(`in air: ${playerAirFrame}`);
 
     // 平均帧率
     objs.push(`${averageFps |0}fps`);

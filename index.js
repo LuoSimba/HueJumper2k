@@ -49,9 +49,7 @@ let playerPitchRoad;            // pitch of road, or 0 if player is in air
 let playerAirFrame;             // how many frames player has been in air
 let worldHeading;               // heading to turn skybox
 let randomSeed;                 // random seed for level
-let startRandomSeed;            // save the starting seed for active use
 let road;                       // the list of road segments
-
 
 function StartLevel()
 { 
@@ -68,10 +66,8 @@ function StartLevel()
     let roadGenWaveScaleX = 0;                  // X wave amplitude (turn size)
     let roadGenWaveScaleY = 0;                  // Y wave amplitude (hill size)
 
-
     // 初始化随机种子
-    startRandomSeed = randomSeed = Date.now();
-    console.log('random seed', randomSeed);
+    randomSeed = SEED;
 
     road = [];                                  // clear list of road segments
     
@@ -251,7 +247,10 @@ function Update()
     {
         // bounce velocity against ground normal
         playerPos.y = playerRoadY;                                                                // match y to ground plane
-        playerAirFrame = 0;                                                                       // reset air grace frames
+
+        // reset air grace frames
+        playerAirFrame = 0;
+
         playerVelocity = new Vector3(0, Math.cos(roadPitch), Math.sin(roadPitch))                 // get ground normal
             .Multiply(-elasticity *                                                               // apply bounce
                (Math.cos(roadPitch) * playerVelocity.y + Math.sin(roadPitch) * playerVelocity.z)) // dot of road and velocity
@@ -277,13 +276,24 @@ function Update()
     }
   
     // update jump
-    if (playerAirFrame++<6 && gBreakOn && mouseUpFrames && mouseUpFrames<9)  // check for jump
+    // check for jump
+    if (playerAirFrame++ < 6)
     {
-        playerVelocity.y += playerJumpSpeed;                                          // apply jump velocity
-        playerAirFrame = 9;                                                           // prevent jumping again
+        if (gBreakOn) {
+            if (mouseUpFrames && mouseUpFrames < 9) {
+                playerVelocity.y += playerJumpSpeed;       // apply jump velocity
+                playerAirFrame = 9;                        // prevent jumping again
+            }
+        }
     }
 
-    mouseUpFrames = gBreakOn ? 0 : mouseUpFrames+1;                                   // update mouse up frames for double click
+    // update mouse up frames for double click
+    if (gBreakOn) {
+        mouseUpFrames = 0;
+    } else {
+        mouseUpFrames ++;
+    }
+
     const airPercent = (playerPos.y-playerRoadY)/99;                                  // calculate above ground percent
     playerPitchSpringVelocity += Lerp(airPercent,0,playerVelocity.y/4e4);             // pitch down with vertical velocity
     
@@ -303,7 +313,7 @@ function Update()
     // multi use local variables
     let x, y, w, i;
 
-    randomSeed = startRandomSeed;                                                                 // set start seed
+    randomSeed = SEED;                                                                 // set start seed
     worldHeading = ClampAngle(worldHeading + playerVelocity.z * playerRoadX * worldRotateScale);  // update world angle
     
     // pre calculate projection scale, flip y because y+ is down on canvas
@@ -364,9 +374,8 @@ function Update()
     }
 
 
-    // draw mountains
-    // how many mountains are there
-    for( i = 30; i--; )                                              // draw every mountain
+    // draw every mountain (there are 30 mountains)
+    for( i = 30; i--; )  
     {
         const angle = ClampAngle(worldHeading+Random(19));                      // mountain random angle
         const lighting = Math.cos(angle-worldHeading);                          // mountain lighting
@@ -425,7 +434,7 @@ function Update()
     for( i = drawDistance; i--; )                                            // iterate in reverse
     {
         const segment1 = road[playerRoadSegment+i];                         
-        randomSeed = startRandomSeed + playerRoadSegment + i;                // random seed for this segment
+        randomSeed = SEED + playerRoadSegment + i;                // random seed for this segment
         const lighting = Math.sin(segment1.a) * Math.cos(worldHeading)*99;   // calculate segment lighting
         const p1 = segment1.p;                                               // projected point
         const p2 = segment2.p;                                               // last projected point
@@ -522,13 +531,9 @@ function Update()
     // 显示各项数据
     /////////////////////////////////////////////////////////////////////////////////////
     HUD(CTX);
-
     
-    
-    // 开始下一帧
     requestAnimationFrame(Update);
 }
-    
     
     
 /////////////////////////////////////////////////////////////////////////////////////

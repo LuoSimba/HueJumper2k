@@ -31,6 +31,14 @@ Features
     <canvas id="c"></canvas>
 
     <script type="text/javascript">
+
+        // save the starting seed for active use
+        // 如果按 R 重新开始游戏，会进入同样的场景，
+        // 因为随机种子不会改变
+        // 
+        // 只有刷新页面才会进入新的场景
+        const SEED = Date.now();
+
         const CAN = document.getElementById('c');
     </script>
     <script type="text/javascript" src="math+helper.js"></script>
