@@ -185,7 +185,7 @@ function Update()
     {
         if (inputWasPushed[82]) // R = restart
         {
-            mouseLockX = 0;
+            gSteerX = 0;
             StartLevel(); 
         }
 
@@ -258,7 +258,7 @@ function Update()
             .Add(playerVelocity);                                                                 // add velocity
 
 
-        if (mouseDown) {
+        if (gBreakOn) {
             playerVelocity.z += playerBrake;    // apply brake
         } else {
             playerVelocity.z += Lerp(playerVelocity.z/playerMaxSpeed, IsGameStart* 1, 0); // apply accel
@@ -277,13 +277,13 @@ function Update()
     }
   
     // update jump
-    if (playerAirFrame++<6 && mouseDown && mouseUpFrames && mouseUpFrames<9)  // check for jump
+    if (playerAirFrame++<6 && gBreakOn && mouseUpFrames && mouseUpFrames<9)  // check for jump
     {
         playerVelocity.y += playerJumpSpeed;                                          // apply jump velocity
         playerAirFrame = 9;                                                           // prevent jumping again
     }
 
-    mouseUpFrames = mouseDown? 0 : mouseUpFrames+1;                                   // update mouse up frames for double click
+    mouseUpFrames = gBreakOn ? 0 : mouseUpFrames+1;                                   // update mouse up frames for double click
     const airPercent = (playerPos.y-playerRoadY)/99;                                  // calculate above ground percent
     playerPitchSpringVelocity += Lerp(airPercent,0,playerVelocity.y/4e4);             // pitch down with vertical velocity
     

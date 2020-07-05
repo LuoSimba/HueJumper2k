@@ -24,9 +24,9 @@ function HUD (ctx) {
     };
 
     // 方向控制
-    objs.push(`steer: ${mouseLockX}`);
+    objs.push(`steer: ${gSteerX}`);
     // 刹车状态
-    objs.push(mouseDown ? 'break on' : 'break off');
+    objs.push(gBreakOn ? 'break on' : 'break off');
 
     // 平均帧率
     objs.push(`${averageFps |0}fps`);

@@ -14,11 +14,11 @@ if (typeof ontouchend != 'undefined') {
     let ProcessTouch = e => {
 
         e.preventDefault();
-        mouseDown = !(e.touches.length > 0);
+        gBreakOn = !(e.touches.length > 0);
         IsGameStart = 1;
         touchMode = 1;
         
-        if (mouseDown)
+        if (gBreakOn)
             return;
 
         // average all touch positions

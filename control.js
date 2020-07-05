@@ -5,7 +5,7 @@ document.onpointerlockchange = function (e) {
 
     if (document.pointerLockElement === CAN) {
         console.log('pointer lock on <canvas>');
-        mouseLockX = 0;
+        gSteerX = 0;
         CAN.onmousedown = CTRL_BRAKE;
         CAN.onmousemove = CTRL_STEER;
         CAN.onmouseup   = CTRL_BREAK_RELEASE;
@@ -19,7 +19,7 @@ document.onpointerlockchange = function (e) {
         // if pointer lock released
         // 这里不考虑触控模式
         //if (!touchMode)
-            mouseDown = 1;
+            gBreakOn = 1;
     }
 };
 
@@ -33,11 +33,11 @@ document.onpointerlockerror = function (e) {
 // mouse input
 /////////////////////////////////////////////////////////////////////////////////////
 
-let mouseDown       = 0; 
+let gBreakOn        = 0; // 刹车
 let IsGameStart     = 0;
 let mouseUpFrames   = 0;
 let mouseX          = 0;
-let mouseLockX      = 0;
+let gSteerX         = 0; // 方向
 let touchMode       = 0;
     
 /**
@@ -59,8 +59,8 @@ const CTRL_RESUME = function (e) {
 /**
  * 刹车控制(鼠标按下，释放)
  */
-const CTRL_BRAKE         = function (e) { mouseDown = 1; };
-const CTRL_BREAK_RELEASE = function (e) { mouseDown = 0; };
+const CTRL_BRAKE         = function (e) { gBreakOn = 1; };
+const CTRL_BREAK_RELEASE = function (e) { gBreakOn = 0; };
 
 
 /**
@@ -78,10 +78,10 @@ const CTRL_STEER = function (e) {
 
     // adjust for pointer lock 
     // movementX: 与上一个鼠标移动事件相比，x轴的增量
-    mouseLockX += e.movementX;
-    mouseLockX = Clamp(mouseLockX, -HALF, HALF);  // mouseLockX = [-HALF, HALF]
+    gSteerX += e.movementX;
+    gSteerX = Clamp(gSteerX, -HALF, HALF);  // gSteerX = [-HALF, HALF]
 
-    const ratio = mouseLockX / HALF;  // ratio = [-1, 1]
+    const ratio = gSteerX / HALF;  // ratio = [-1, 1]
 
     // 得到绝对值
     const uratio = Math.abs(ratio);  // uratio = [0, 1]
