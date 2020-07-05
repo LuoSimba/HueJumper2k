@@ -2,7 +2,6 @@
     
 const c = document.getElementById('c'); // <canvas>
 
-const CAN = c;
 const CTX = CAN.getContext('2d');
 const WIDTH  = 700;
 const HEIGHT = 600;
@@ -181,12 +180,6 @@ function Update()
     c.width  = WIDTH;
     c.height = HEIGHT;
     
-
-    // set mouse down if pointer lock released
-    if (document.pointerLockElement !== c && !touchMode) // NOTE: use pointer lock
-        mouseDown = 1; 
-
-
 
     // update debug pre
     {

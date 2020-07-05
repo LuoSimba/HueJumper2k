@@ -10,7 +10,6 @@ function HUD (ctx) {
     const objs = [];
     //objs.push(playerVelocity);
     //objs.push(timeBuffer);
-    objs.push(mouseLockX);
 
     ctx.save();
     ctx.font = '2em"';
@@ -24,6 +23,10 @@ function HUD (ctx) {
         y += 50;
     };
 
+    // 方向控制
+    objs.push(`steer: ${mouseLockX}`);
+    // 刹车状态
+    objs.push(mouseDown ? 'break on' : 'break off');
 
     // 平均帧率
     objs.push(`${averageFps |0}fps`);
