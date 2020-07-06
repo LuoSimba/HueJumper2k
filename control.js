@@ -110,34 +110,37 @@ const CTRL_STEER = function (e) {
 // keyboard control
 /////////////////////////////////////////////////////////////////////////////////////
 
-let inputIsDown    = [];
-let inputWasDown   = [];
-let inputWasPushed = [];
+
+let gKeys = [];
+
+(function () {
+    const gKeyState = new Set;
+
+    const _KEYUP = function (e) {
+        gKeyState.delete(e.keyCode);
+    };
+
+    const _KEYDOWN = function (e) {
+        // 如果已经是按下状态，什么也不做
+        if (gKeyState.has(e.keyCode))
+        {
+            // do nothing
+        }
+        else 
+        {
+            gKeyState.add(e.keyCode);
+            gKeys.push(e.keyCode);
+        }
+    };
 
 
-/**
- * 按下按键
- */
-window.onkeydown = function (e) {
-
-    inputIsDown[e.keyCode] = 1;
-};
-
-/**
- * 释放按键
- */
-window.onkeyup = function (e) {
-
-    inputIsDown[e.keyCode] = 0;
-};
+    window.onkeyup   = _KEYUP;
+    window.onkeydown = _KEYDOWN;
+})();
 
 
-function UpdateInput()
-{
-    inputWasPushed = inputIsDown.map(
-            (e,i) => e && !inputWasDown[i]
-            );
 
-    inputWasDown = inputIsDown.slice();
-}
+// window.onkeydown 和 window.onkeypress 有区别
+// onkeydown 可以响应方向键，而 onkeypress 无法感知。
+// 共同点：都在按键按下时触发，而且会连续触发
 

@@ -1,5 +1,27 @@
 'use strict';
 
+// clamp 夹子
+// remainder 剩余物，余数
+// remainder operation 取余运算（数学概念）
+// modulus 模量
+// modulus operation 取模运算（计算机术语: 取模数的余数）（a % b）
+
+// -7 mod 4 = ?
+// 1. c = (-7) / 4 = -1.75
+// 2. c' = floor(c) = -2
+// 3. -7 = c' * 4 + r 
+//       = (-2) * 4 + 1
+// r = 1
+
+// ################## JavaScript ################
+// -7 % 4 = ?
+// 1. c = (-7) / 4 = -1.75
+// 2. c' = fix(c) = -1
+// 3. -7 = c' * 4 + r
+//       = (-1) * 4 + (-3)
+// r = -3
+// ##############################################
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 // math and helper functions
@@ -32,7 +54,27 @@ const Clamp = (v, min, max) => Math.min(
     Math.max(v, min), max
 );
 
-const ClampAngle = (a) => (a+Math.PI) % (2*Math.PI) + (a+Math.PI<0? Math.PI : -Math.PI);
+
+
+/**
+ * return angle between -180deg and 180deg
+ */
+function ClampAngle(a)
+{
+    // b 是一个未知的角度
+    let b = a + Math.PI;
+
+    // c = b % (360deg)
+    // if b >= 0: c is [0, 2pi)
+    // else:      c is (-2pi, 0)
+    let c = b % (Math.PI * 2);
+
+    if (b < 0) {
+        return c + Math.PI;  // (-pi, pi)
+    } else {
+        return c - Math.PI;  // [-pi, pi)
+    }
+}
 
 /**
  * 插值函数

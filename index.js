@@ -2,7 +2,6 @@
     
 const c = document.getElementById('c'); // <canvas>
 
-const CTX = CAN.getContext('2d');
 const WIDTH  = 700;
 const HEIGHT = 600;
 
@@ -36,7 +35,7 @@ const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
 const checkpointMaxDifficulty = 9;   // how many checkpoints before max difficulty
-const roadEnd = 1e4;                 // how many sections until end of the road
+const ROAD_END = 10000;               // how many sections until end of the road
     
 // global game variables  
 let playerPos;                  // player position 3d vector
@@ -47,7 +46,10 @@ let playerPitchSpring;          // spring for player pitch bounce
 let playerPitchSpringVelocity;  // velocity of pitch spring
 let playerPitchRoad;            // pitch of road, or 0 if player is in air
 let playerAirFrame;             // how many frames player has been in air
-let worldHeading;               // heading to turn skybox
+
+// heading to turn skybox
+let worldHeading;
+
 let randomSeed;                 // random seed for level
 let road;                       // the list of road segments
 
@@ -69,12 +71,13 @@ function StartLevel()
     // 初始化随机种子
     randomSeed = SEED;
 
-    road = [];                                  // clear list of road segments
+    // clear list of road segments
+    road = [];
     
     // generate the road
-    for( let i = 0; i < roadEnd*2; ++i )                                      // build road past end
+    for( let i = 0; i < ROAD_END * 2; i ++ )           // build road past end
     {
-        if (roadGenSectionDistance++ > roadGenSectionDistanceMax)             // check for end of section
+        if (roadGenSectionDistance++ > roadGenSectionDistanceMax)     // check for end of section
         {
             // calculate difficulty percent
             const difficulty = Math.min(
@@ -86,7 +89,7 @@ function StartLevel()
             roadGenWidth = ROAD_WIDTH * Random(1-difficulty*.7, 3-2*difficulty);        // road width
             roadGenWaveFrequencyX = Random(Lerp(difficulty, .01, .02));              // X frequency
             roadGenWaveFrequencyY = Random(Lerp(difficulty, .01, .03));              // Y frequency
-            roadGenWaveScaleX = i > roadEnd ? 0 : Random(Lerp(difficulty, .2, .6));  // X scale
+            roadGenWaveScaleX = i > ROAD_END ? 0 : Random(Lerp(difficulty, .2, .6));  // X scale
             roadGenWaveScaleY = Random(Lerp(difficulty, 1e3, 2e3));                  // Y scale
             
             // apply taper and move back
@@ -105,7 +108,7 @@ function StartLevel()
         const p = Clamp(roadGenSectionDistance / roadGenTaper, 0, 1);         // get taper percent
         road[i].x = Lerp(p, road[i].x, x);                                    // X pos and taper
         road[i].y = Lerp(p, road[i].y, y);                                    // Y pos and taper
-        road[i].w = i > roadEnd ? 0 : Lerp(p, road[i].w, roadGenWidth);       // check for road end, width and taper
+        road[i].w = i > ROAD_END ? 0 : Lerp(p, road[i].w, roadGenWidth);       // check for road end, width and taper
         road[i].a = road[i-1] ? Math.atan2(road[i-1].y-road[i].y, roadSegmentLength) : 0; // road pitch angle
     }  
     
@@ -124,7 +127,8 @@ function StartLevel()
     // set player pos
     playerPos = new Vector3(0, PLAYER_HEIGHT, 0);
 
-    worldHeading = randomSeed;                  // randomize world heading
+    // randomize world heading
+    worldHeading = randomSeed;
 }
     
 // 上次执行 update 的时间
@@ -173,21 +177,20 @@ function Update()
 
     // start frame
     // 重新调整尺寸，清除画布
-    c.width  = WIDTH;
-    c.height = HEIGHT;
+    CAN.width  = WIDTH;
+    CAN.height = HEIGHT;
     
 
     // update debug pre
-    {
-        if (inputWasPushed[82]) // R = restart
+    if (gKeys.length > 0) {
+
+        const key_code = gKeys.shift();
+
+        if (key_code === 82) // R = restart
         {
+            console.log('RESTART ...');
             gSteerX = 0;
             StartLevel(); 
-        }
-
-        if (inputWasPushed[49]) // 1 = screenshot
-        {
-            console.log('snapshot.png');
         }
     }
     
@@ -302,8 +305,12 @@ function Update()
     playerPitchSpringVelocity -= playerPitchSpring * playerSpringConstant;            // apply pitch spring constant
     playerPitchSpringVelocity *= pitchSpringDamping;                                  // dampen pitch spring
     playerPitchSpring += playerPitchSpringVelocity;                                   // update pitch spring        
-    playerPitchRoad = Lerp(pitchLerp, playerPitchRoad, Lerp(airPercent,-roadPitch,0));// match pitch to road
-    const playerPitch = playerPitchSpring + playerPitchRoad;                          // update player pitch
+
+    // match pitch to road
+    playerPitchRoad = Lerp(pitchLerp, playerPitchRoad, Lerp(airPercent,-roadPitch,0));
+
+    // update player pitch
+    const playerPitch = playerPitchSpring + playerPitchRoad;
     
     
     /////////////////////////////////////////////////////////////////////////////////////
@@ -313,19 +320,25 @@ function Update()
     // multi use local variables
     let x, y, w, i;
 
-    randomSeed = SEED;                                                                 // set start seed
-    worldHeading = ClampAngle(worldHeading + playerVelocity.z * playerRoadX * worldRotateScale);  // update world angle
+    randomSeed = SEED;                   // set start seed
+
+    // update world angle
+    worldHeading = ClampAngle(
+            worldHeading + playerVelocity.z * playerRoadX * worldRotateScale);
     
     // pre calculate projection scale, flip y because y+ is down on canvas
     const projectScale = (new Vector3(1, -1, 1)).Multiply(c.width/2/cameraDepth);                 // get projection scale
 
     // scale of player turning to rotate camera(camera heading scale) = 2
     const cameraHeading = playerTurnAmount * 2;     // turn camera with player 
-    const cameraOffset = Math.sin(cameraHeading)/2;                  // apply heading with offset
+    const cameraOffset = Math.sin(cameraHeading) / 2;        // apply heading with offset
     
     // 绘制天空
     const lighting = Math.cos(worldHeading);                                    // brightness from sun
-    const horizon = c.height/2 - Math.tan(playerPitch) * projectScale.y;        // get horizon line
+
+    // get horizon line
+    // 基本上在画面高度的一半
+    const horizon = HEIGHT / 2 - Math.tan(playerPitch) * projectScale.y;
 
     // 使用线性渐变作为天空的颜色
     const g = CTX.createLinearGradient(0,horizon-c.height/2,0,horizon);
@@ -333,52 +346,57 @@ function Update()
     g.addColorStop( 1, LSHA(5,79,250-lighting*9));                                // bottom sky color
 
     // draw sky
-    DrawRect(0, 0, c.width, c.height, g);
+    DrawRect(0, 0, WIDTH, HEIGHT, g);
     
 
     {
         // 绘制月亮
-        const x = CAN.width * (
-                    .5 + Lerp (      // angle 0 is center
-                        (worldHeading / Math.PI / 2 + .5 + 1 / 2) % 1,  // sun angle percent
-                        4, -4) - cameraOffset
-                ); // move far away for wrap
+        const ratio = worldHeading / Math.PI; // ratio is [-1, 1)
+        const ratio2 = ratio / 2;   // ratio2 is [-0.5, 0.5)
+        const ratio3 = ratio2 + 0.5;  // ratio3 is [0, 1)
+        const ratio4 = (ratio3 + .5) % 1; // sun angle percent, angle 0 is center
+        const ratio5 = Lerp(ratio4, 4, -4);
 
-        const y = horizon - CAN.width / 5;
+        const ratio6 = 0.5 + 0 - cameraOffset;
+
+        // move far away for wrap
+        const x = WIDTH * ratio6;
+
+        const y = horizon - WIDTH / 5;
 
         const g = CTX.createRadialGradient(
-                x, y, CAN.width / 25,
-                x, y, CAN.width / 23);
+                x, y, WIDTH / 25,
+                x, y, WIDTH / 23);
 
         g.addColorStop(0, "#b3b3b3");
         g.addColorStop(1, "transparent");
 
-        DrawRect(0, 0, CAN.width, CAN.height, g);
+        DrawRect(0, 0, WIDTH, HEIGHT, g);
     }
     {
         // 绘制太阳
-        x = CAN.width * ( .5 + Lerp (      // angle 0 is center
+        x = WIDTH * ( .5 + Lerp (      // angle 0 is center
                     (worldHeading / Math.PI / 2 + .5 + 0 / 2) % 1,  // sun angle percent
                     4, -4) - cameraOffset); // sun x pos, move far away for wrap
 
-        y = horizon - CAN.width / 5;     // sun y pos
+        y = horizon - WIDTH / 5;     // sun y pos
 
         const g = CTX.createRadialGradient(
-            x, y, CAN.width / 25,
-            x, y, CAN.width);
+            x, y, WIDTH / 25,
+            x, y, WIDTH);
 
         g.addColorStop(0, "#fcfcfc");
         g.addColorStop(1, "transparent");
 
-        DrawRect(0, 0, CAN.width, CAN.height, g);
+        DrawRect(0, 0, WIDTH, HEIGHT, g);
     }
 
 
     // draw every mountain (there are 30 mountains)
     for( i = 30; i--; )  
     {
-        const angle = ClampAngle(worldHeading+Random(19));                      // mountain random angle
-        const lighting = Math.cos(angle-worldHeading);                          // mountain lighting
+        const angle = ClampAngle(worldHeading+Random(19));           // mountain random angle
+        const lighting = Math.cos(angle-worldHeading);               // mountain lighting
 
         // mountain x pos, move far away for wrap
         x = c.width * (.5+Lerp(angle/Math.PI/2+.5, 4, -4)-cameraOffset);
@@ -521,9 +539,6 @@ function Update()
     }
     // -------------------------- 绘制段到此结束
     
-    // UPDATE DEBUG POST
-    UpdateInput();
-
     // 计算帧率
     UpdateFps();
     
