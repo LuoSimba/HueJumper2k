@@ -111,8 +111,6 @@ const CTRL_STEER = function (e) {
 /////////////////////////////////////////////////////////////////////////////////////
 
 
-let gKeys = [];
-
 (function () {
     const gKeyState = new Set;
 
@@ -129,7 +127,8 @@ let gKeys = [];
         else 
         {
             gKeyState.add(e.keyCode);
-            gKeys.push(e.keyCode);
+
+            DealKey(e.keyCode);
         }
     };
 
@@ -137,6 +136,22 @@ let gKeys = [];
     window.onkeyup   = _KEYUP;
     window.onkeydown = _KEYDOWN;
 })();
+
+/**
+ * 对按键的处理
+ *
+ * 可以立马响应按键，而不必等到 Update() 函数执行
+ */
+function DealKey(key_code) {
+
+    if (key_code === 82)  // R = restart
+    {
+        console.log('RESTART ...');
+        gSteerX = 0;
+        StartLevel(); 
+    }
+    // else ...
+}
 
 
 

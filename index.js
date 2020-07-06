@@ -180,22 +180,6 @@ function Update()
     CAN.width  = WIDTH;
     CAN.height = HEIGHT;
     
-
-    // update debug pre
-    if (gKeys.length > 0) {
-
-        const key_code = gKeys.shift();
-
-        if (key_code === 82) // R = restart
-        {
-            console.log('RESTART ...');
-            gSteerX = 0;
-            StartLevel(); 
-        }
-    }
-    
-
-
     /////////////////////////////////////////////////////////////////////////////////////
     // update player - controls and physics
     /////////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +204,6 @@ function Update()
     // apply lateral 阻尼
     // dampen player x speed
     playerVelocity.x *= .7;
-
 
     {
         // apply 阻尼
@@ -545,7 +528,7 @@ function Update()
     /////////////////////////////////////////////////////////////////////////////////////
     // 显示各项数据
     /////////////////////////////////////////////////////////////////////////////////////
-    HUD(CTX);
+    HUD();
     
     requestAnimationFrame(Update);
 }

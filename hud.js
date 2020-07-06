@@ -5,21 +5,21 @@
  *
  * 不会更改数据本身
  */
-function HUD (ctx) {
+function HUD () {
 
     const objs = [];
     //objs.push(playerVelocity);
     //objs.push(timeBuffer);
     objs.push(mouseUpFrames);
 
-    ctx.save();
-    ctx.font = '2em"';
-    ctx.fillStyle = 'red';
+    CTX.save();
+    CTX.font = '2em"';
+    CTX.fillStyle = 'red';
 
     let y = 50;
 
     const print = text => {
-        ctx.fillText(text, 9, y);
+        CTX.fillText(text, 9, y);
 
         y += 50;
     };
@@ -48,6 +48,6 @@ function HUD (ctx) {
         print(text);
     }
 
-    ctx.restore();
+    CTX.restore();
 }
 
