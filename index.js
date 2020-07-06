@@ -319,7 +319,9 @@ function Update()
             worldHeading + playerVelocity.z * playerRoadX * worldRotateScale);
     
     // pre calculate projection scale, flip y because y+ is down on canvas
-    const projectScale = (new Vector3(1, -1, 1)).Multiply(c.width/2/cameraDepth);                 // get projection scale
+    // get projection scale
+    const projectScale = new Vector3(1, -1, 1);
+    projectScale.multiply(WIDTH/2/cameraDepth);
 
     // scale of player turning to rotate camera(camera heading scale) = 2
     const cameraHeading = playerTurnAmount * 2;     // turn camera with player 
@@ -424,7 +426,13 @@ function Update()
             x += w += road[playerRoadSegment+i].x,                               // sum local road offsets
             road[playerRoadSegment+i].y, (playerRoadSegment+i)*roadSegmentLength);// road y and z pos
 
-        p.addVector(playerPos.Multiply(-1));              // subtract to get local space
+        {
+            let a = playerPos.copy();
+
+            a.multiply(-1);
+
+            p.addVector(a);      // subtract to get local space
+        }
 
         p.x = p.x*Math.cos(cameraHeading) - p.z*Math.sin(cameraHeading); // rotate camera heading
         
@@ -435,17 +443,15 @@ function Update()
         
         // project road segment to canvas space
         {
-            let a = p.Multiply(new Vector3(z, z, 1));  // projection
+            let a = p.copy();
 
-            let b = a.Multiply(projectScale);  // scale
-
-            let n = new Vector3(WIDTH/2, HEIGHT/2, 0);
-
+            a.multiplyVector(new Vector3(z, z, 1));  // projection
+            a.multiplyVector(projectScale);  // scale
             // center on canvas
-            b.addVector(n);
+            a.add(WIDTH/2, HEIGHT/2, 0);
 
             // set projected road point
-            road[playerRoadSegment+i++].p = b;
+            road[playerRoadSegment+i++].p = a;
         }
     }
     
@@ -516,7 +522,9 @@ function Update()
                     && Math.abs(playerPos.z - z) < 200                           // z collision
                     && playerPos.y- PLAYER_HEIGHT < segment1.y+200+height)         // y collision + object height
                 {
-                    playerVelocity = playerVelocity.Multiply(segment1.h = playerCollisionSlow); // stop player and mark hit
+                    segment1.h = playerCollisionSlow;
+
+                    playerVelocity.multiply(segment1.h); // stop player and mark hit
                 }
 
                 // draw road object

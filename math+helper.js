@@ -128,6 +128,7 @@ class Vector3
         return new Vector3(this.x, this.y, this.z);
     }
 
+    // ======================== 加法 =========================
     add (x, y, z) {
         this.x += x;
         this.y += y;
@@ -138,17 +139,10 @@ class Vector3
         if (!(v instanceof Vector3))
             throw new Error('invalid v');
 
-        this.x += v.x;
-        this.y += v.y;
-        this.z += v.z;
+        this.add(v.x, v.y, v.z);
     }
 
-	Multiply(v) {
-        v = isNaN(v) ? v : new Vector3(v,v,v);
-
-        return new Vector3( this.x * v.x, this.y * v.y, this.z * v.z);
-    }
-
+    // ======================== 乘法 =========================
     multiplyVector (v) {
         if (!(v instanceof Vector3))
             throw new Error('invalid v');
