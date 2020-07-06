@@ -84,13 +84,12 @@ function ClampAngle(a)
  * from 起始位置
  * to   目标位置
  */
-const Lerp = (p, from, to) => {
+function Lerp (p, from, to) {
 
-    // 将 p 值限定在 [0, 1] 之内
-    p = Clamp(p, 0, 1);
+    p = Clamp(p, 0, 1); // p is [0,1]
 
     return from + (to - from) * p;
-};
+}
 
 /**
  * 随机函数

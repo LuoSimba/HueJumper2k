@@ -18,10 +18,9 @@ The a.htm file when zipped with advzip should be under 2k.
 
 ## 控制
 * 鼠标 = 方向控制
-* 点击 = 刹车
-* 双击 = 跳跃
+* 空格键 = 刹车
+* 双击空格键 = 跳跃
 * R = 重新开始
-* 1 = 屏幕快照
 
 ## 怎么玩
 赛道是随机生成的，每次都不一样。

@@ -5,12 +5,11 @@ const c = document.getElementById('c'); // <canvas>
 const WIDTH  = 700;
 const HEIGHT = 600;
 
-const CHECKPOINT_DISTANCE = 100000;  // how far between checkpoints
 
 // draw settings
 const drawDistance = 800;            // how many road segments to draw in front of player
 const cameraDepth = 1;               // FOV of camera (1 / Math.tan((fieldOfView/2) * Math.PI/180))
-const roadSegmentLength = 100;       // length of each road segment
+const ROAD_SEGMENT_LENGTH = 100;       // length of each road segment
 const ROAD_WIDTH = 500;               // how wide is road
 const warningTrackWidth = 150;       // with of road plus warning track
 const dashLineWidth = 9;             // width of the dashed line in the road
@@ -18,8 +17,7 @@ const dashLineWidth = 9;             // width of the dashed line in the road
 
 // player settings
 const PLAYER_HEIGHT = 150;            // how high is player above ground
-const playerMaxSpeed = 300;          // limit max player speed
-const playerBrake = -3;              // player acceleration when breaking
+const MAX_SPEED = 300;          // limit max player speed
 const playerTurnControl = .2;        // player turning rate
 const playerJumpSpeed = 25;          // z speed added for jump
 const playerSpringConstant = .01;    // spring players pitch
@@ -32,7 +30,6 @@ const centrifugal = .002;            // how much to pull player on turns
 const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
-const checkpointMaxDifficulty = 9;   // how many checkpoints before max difficulty
 const ROAD_END = 10000;               // how many sections until end of the road
     
 // global game variables  
@@ -50,6 +47,24 @@ let worldHeading;
 
 let randomSeed;                 // random seed for level
 let road;                       // the list of road segments
+
+
+/**
+ * road segment
+ */
+class RoadSeg {
+
+    x = 0;
+    y = 0;
+    w = 0;
+
+    constructor (x, y, w) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+    }
+}
+
 
 function StartLevel()
 { 
@@ -73,22 +88,35 @@ function StartLevel()
     road = [];
     
     // generate the road
+    // 一共生成 2W 条数据
     for( let i = 0; i < ROAD_END * 2; i ++ )           // build road past end
     {
         if (roadGenSectionDistance++ > roadGenSectionDistanceMax)     // check for end of section
         {
-            // calculate difficulty percent
-            const difficulty = Math.min(
-                    1,
-                    i*roadSegmentLength/CHECKPOINT_DISTANCE/checkpointMaxDifficulty
-                    ); // difficulty
-            
-            // randomize road settings
-            roadGenWidth = ROAD_WIDTH * Random(1-difficulty*.7, 3-2*difficulty);        // road width
-            roadGenWaveFrequencyX = Random(Lerp(difficulty, .01, .02));              // X frequency
-            roadGenWaveFrequencyY = Random(Lerp(difficulty, .01, .03));              // Y frequency
-            roadGenWaveScaleX = i > ROAD_END ? 0 : Random(Lerp(difficulty, .2, .6));  // X scale
-            roadGenWaveScaleY = Random(Lerp(difficulty, 1e3, 2e3));                  // Y scale
+
+            const ia = i * 100;
+
+            // calculate difficulty percent （困难程度）
+            // 用 9 个检查点那么长的路程作为分母
+            // 如果 ia 超过分母，则难度超过 1
+            let difficulty = ia / 900000;
+
+            // 困难程度不会超过 1
+            if (difficulty > 1) 
+                difficulty = 1;
+
+            // 随机设置赛道
+            //
+            // 赛道宽度
+            roadGenWidth          = ROAD_WIDTH * Random(1-difficulty*.7, 3-2*difficulty);
+            // X frequency
+            roadGenWaveFrequencyX = Random(Lerp(difficulty, .01, .02));
+            // Y frequency
+            roadGenWaveFrequencyY = Random(Lerp(difficulty, .01, .03));
+            // X scale
+            roadGenWaveScaleX     = i > ROAD_END ? 0 : Random(Lerp(difficulty, .2, .6));
+            // Y scale
+            roadGenWaveScaleY     = Random(Lerp(difficulty, 1e3, 2e3));
             
             // apply taper and move back
             roadGenTaper = Random(99, 1e3)|0;                           // randomize taper
@@ -97,23 +125,47 @@ function StartLevel()
             i -= roadGenTaper;                                          // subtract taper
         }
         
-        // make a wavy road
-        const x = Math.sin(i*roadGenWaveFrequencyX) * roadGenWaveScaleX;      // road X
-        const y = Math.sin(i*roadGenWaveFrequencyY) * roadGenWaveScaleY;      // road Y
-        road[i] = road[i]? road[i] : {x:x, y:y, w:roadGenWidth};              // get or make road segment
+        // 让道路变得崎岖
+        // road X
+        const x = Math.sin(i*roadGenWaveFrequencyX) * roadGenWaveScaleX;
+        // road Y
+        const y = Math.sin(i*roadGenWaveFrequencyY) * roadGenWaveScaleY;
+
+        let currentRoad;
+
+        if (road[i]) 
+        {
+            currentRoad = road[i];
+        }
+        else 
+        {
+            currentRoad = new RoadSeg(x, y, roadGenWidth);
+        }
         
         // apply taper from last section
         const p = Clamp(roadGenSectionDistance / roadGenTaper, 0, 1);         // get taper percent
-        road[i].x = Lerp(p, road[i].x, x);                                    // X pos and taper
-        road[i].y = Lerp(p, road[i].y, y);                                    // Y pos and taper
-        road[i].w = i > ROAD_END ? 0 : Lerp(p, road[i].w, roadGenWidth);       // check for road end, width and taper
+
+        // X pos and taper
+        currentRoad.x = Lerp(p, currentRoad.x, x);
+
+        // Y pos and taper
+        currentRoad.y = Lerp(p, currentRoad.y, y);
+
+        // check for road end, width and taper
+        if (i > ROAD_END) {
+            currentRoad.w = 0;
+        } else {
+            currentRoad.w = Lerp(p, currentRoad.w, roadGenWidth);
+        }
 
         // road pitch angle
         if (road[i-1]) {
-            road[i].ang = Math.atan2(road[i-1].y-road[i].y, roadSegmentLength);
+            currentRoad.ang = Math.atan2(road[i-1].y- currentRoad.y, ROAD_SEGMENT_LENGTH);
         } else {
-            road[i].ang = 0;
+            currentRoad.ang = 0;
         }
+
+        road[i] = currentRoad;
     }  
     
     /////////////////////////////////////////////////////////////////////////////////////
@@ -187,8 +239,8 @@ function Update()
     /////////////////////////////////////////////////////////////////////////////////////
     
     // get player road segment
-    const playerRoadSegment        = playerPos.z/roadSegmentLength|0;         // current player road segment 
-    const playerRoadSegmentPercent = playerPos.z/roadSegmentLength%1;  // how far player is along current segment
+    const playerRoadSegment        = playerPos.z/ROAD_SEGMENT_LENGTH|0;         // current player road segment 
+    const playerRoadSegmentPercent = playerPos.z/ROAD_SEGMENT_LENGTH%1;  // how far player is along current segment
     
     // get lerped values between last and current road segment
     const playerRoadX = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].x, road[playerRoadSegment+1].x);
@@ -204,33 +256,31 @@ function Update()
 
 
     // 施加在 Y 轴上的重力
-    playerVelocity.y --;
+    // 就是物体下落的速度，标准是每次-1
+    playerVelocity.y -= 0.1;
 
     // apply lateral 阻尼
     // dampen player x speed
     playerVelocity.x *= .7;
 
-    {
-        // apply 阻尼
-        // dampen player z speed
-        // forward damping
-        let aaa = playerVelocity.z * .999;
-
-        // 只须前进，不许倒退
-        if (aaa < 0)
-            aaa = 0;
-
-        playerVelocity.z = aaa;
-    }
+    // apply 阻尼
+    // dampen player z speed
+    // forward damping
+    playerVelocity.z *= .999;
+        
+    // 只须前进，不许倒退
+    if (playerVelocity.z < 0)
+        playerVelocity.z = 0;
 
     // 按照速度前进
     playerPos.addVector(playerVelocity);
     
-    const playerTurnAmount = Lerp(playerVelocity.z/playerMaxSpeed, mouseX * playerTurnControl, 0); // turning
+    const playerTurnAmount = Lerp(playerVelocity.z/MAX_SPEED, mouseX * playerTurnControl, 0); // turning
 
-    playerVelocity.x +=                                          // update x velocity
-        playerVelocity.z * playerTurnAmount -                    // apply turn
-        playerVelocity.z ** 2 * centrifugal * playerRoadX;       // apply centrifugal force
+    // update x velocity
+    playerVelocity.x +=
+        playerVelocity.z * playerTurnAmount -                // apply turn
+        playerVelocity.z ** 2 * centrifugal * playerRoadX;   // apply centrifugal force
 
     // 检查是否在地面上
     if (playerPos.y < playerRoadY)
@@ -260,13 +310,17 @@ function Update()
 
 
         if (gBreakOn) {
-            playerVelocity.z += playerBrake;    // apply brake
+            // 刹车
+            // 刹车相当于一个反向的加速度
+            playerVelocity.z += -3;
         } else {
-            playerVelocity.z += Lerp(playerVelocity.z/playerMaxSpeed, IsGameStart* 1, 0); // apply accel
+            // apply accel
+            playerVelocity.z += Lerp(playerVelocity.z/MAX_SPEED, IsGameStart* 1, 0);
         }
 
         
-        if (Math.abs(playerPos.x) > road[playerRoadSegment].w)                      // check if off road
+        // check if off road
+        if (Math.abs(playerPos.x) > road[playerRoadSegment].w)
         {
             // 离开道路时，车速降低
             // 离开道路时，阻尼（damping）增大
@@ -433,7 +487,7 @@ function Update()
         // create road world position
         let p = new Vector3(                                                     // set road position
             x += w += road[playerRoadSegment+i].x,                               // sum local road offsets
-            road[playerRoadSegment+i].y, (playerRoadSegment+i)*roadSegmentLength);// road y and z pos
+            road[playerRoadSegment+i].y, (playerRoadSegment+i)*ROAD_SEGMENT_LENGTH);// road y and z pos
 
         {
             let a = playerPos.copy();
@@ -490,7 +544,7 @@ function Update()
                         LSHA(((playerRoadSegment+i)%19<9? 50: 20)+lighting));       // warning track stripe color
                 
                 // road
-                const z = (playerRoadSegment+i)*roadSegmentLength;                  // segment distance
+                const z = (playerRoadSegment+i)*ROAD_SEGMENT_LENGTH;                  // segment distance
                 // TODO delete z
 
                 {
@@ -523,7 +577,7 @@ function Update()
             if (Random()<.2 && playerRoadSegment+i>29)                           // check for road object
             {
                 // player object collision check
-                const z = (playerRoadSegment+i)*roadSegmentLength;               // segment distance
+                const z = (playerRoadSegment+i)*ROAD_SEGMENT_LENGTH;               // segment distance
                 const height = (Random(2)|0) * 400;                              // object type & height
                 x = 2 * ROAD_WIDTH * Random(10,-10) * Random(9);                    // choose object pos
                 if (!segment1.h                                                  // prevent hitting the same object

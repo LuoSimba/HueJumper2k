@@ -6,14 +6,12 @@ document.onpointerlockchange = function (e) {
     if (document.pointerLockElement === CAN) {
         console.log('pointer lock on <canvas>');
         gSteerX = 0;
-        CAN.onmousedown = CTRL_BRAKE;
         CAN.onmousemove = CTRL_STEER;
-        CAN.onmouseup   = CTRL_BREAK_RELEASE;
+        CAN.onmousedown = null;
     } else {
         console.log('exit pointer lock!');
         CAN.onmousedown = CTRL_RESUME;
         CAN.onmousemove = null;
-        CAN.onmouseup   = null;
 
         // set mouse down
         // if pointer lock released
@@ -56,11 +54,6 @@ const CTRL_RESUME = function (e) {
     this.requestPointerLock();
 };
 
-/**
- * 刹车控制(鼠标按下，释放)
- */
-const CTRL_BRAKE         = function (e) { gBreakOn = 1; };
-const CTRL_BREAK_RELEASE = function (e) { gBreakOn = 0; };
 
 
 /**
@@ -115,7 +108,13 @@ const CTRL_STEER = function (e) {
     const gKeyState = new Set;
 
     const _KEYUP = function (e) {
-        gKeyState.delete(e.keyCode);
+
+        if (gKeyState.has(e.keyCode)) 
+        {
+            gKeyState.delete(e.keyCode);
+
+            DealKeyRelease(e.keyCode);
+        }
     };
 
     const _KEYDOWN = function (e) {
@@ -128,7 +127,7 @@ const CTRL_STEER = function (e) {
         {
             gKeyState.add(e.keyCode);
 
-            DealKey(e.keyCode);
+            DealKeyPush(e.keyCode);
         }
     };
 
@@ -142,17 +141,28 @@ const CTRL_STEER = function (e) {
  *
  * 可以立马响应按键，而不必等到 Update() 函数执行
  */
-function DealKey(key_code) {
+function DealKeyPush(key_code) {
 
     if (key_code === 82)  // R = restart
     {
         console.log('RESTART ...');
         gSteerX = 0;
         StartLevel(); 
+    } else if (key_code === 32) { // Space: brake
+        gBreakOn = 1;
     }
     // else ...
 }
 
+/**
+ * 释放按键处理
+ */
+function DealKeyRelease(key_code) {
+
+    if (key_code === 32) { // Space: brake
+        gBreakOn = 0;
+    }
+}
 
 
 // window.onkeydown 和 window.onkeypress 有区别
