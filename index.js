@@ -14,7 +14,6 @@ const roadSegmentLength = 100;       // length of each road segment
 const ROAD_WIDTH = 500;               // how wide is road
 const warningTrackWidth = 150;       // with of road plus warning track
 const dashLineWidth = 9;             // width of the dashed line in the road
-const maxPlayerX = 2e3;              // player can not move this far from center of road
 
 
 // player settings
@@ -108,7 +107,13 @@ function StartLevel()
         road[i].x = Lerp(p, road[i].x, x);                                    // X pos and taper
         road[i].y = Lerp(p, road[i].y, y);                                    // Y pos and taper
         road[i].w = i > ROAD_END ? 0 : Lerp(p, road[i].w, roadGenWidth);       // check for road end, width and taper
-        road[i].a = road[i-1] ? Math.atan2(road[i-1].y-road[i].y, roadSegmentLength) : 0; // road pitch angle
+
+        // road pitch angle
+        if (road[i-1]) {
+            road[i].ang = Math.atan2(road[i-1].y-road[i].y, roadSegmentLength);
+        } else {
+            road[i].ang = 0;
+        }
     }  
     
     /////////////////////////////////////////////////////////////////////////////////////
@@ -188,9 +193,11 @@ function Update()
     // get lerped values between last and current road segment
     const playerRoadX = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].x, road[playerRoadSegment+1].x);
 
+    // ground plane
     const playerRoadY = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].y, road[playerRoadSegment+1].y) + PLAYER_HEIGHT;
 
-    const roadPitch   = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].a, road[playerRoadSegment+1].a);
+    // 路的倾斜程度
+    const roadPitch = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].ang, road[playerRoadSegment+1].ang);
 
     // save last velocity
     const playerVelocityLast = playerVelocity.copy();
@@ -216,7 +223,7 @@ function Update()
         playerVelocity.z = aaa;
     }
 
-    // add player velocity
+    // 按照速度前进
     playerPos.addVector(playerVelocity);
     
     const playerTurnAmount = Lerp(playerVelocity.z/playerMaxSpeed, mouseX * playerTurnControl, 0); // turning
@@ -225,13 +232,13 @@ function Update()
         playerVelocity.z * playerTurnAmount -                    // apply turn
         playerVelocity.z ** 2 * centrifugal * playerRoadX;       // apply centrifugal force
 
-    playerPos.x = Clamp(playerPos.x, -maxPlayerX, maxPlayerX);   // limit player x position
-    
-    // check if on ground
+    // 检查是否在地面上
     if (playerPos.y < playerRoadY)
     {
         // bounce velocity against ground normal
-        playerPos.y = playerRoadY;                                                                // match y to ground plane
+
+        // 没有这一行，赛车会因为重力沉入地下
+        playerPos.y = playerRoadY;
 
         // reset air grace frames
         playerAirFrame = 0;
@@ -269,7 +276,9 @@ function Update()
             playerPitchSpring += Math.sin(playerPos.z/99) ** 4 / 99;
         }
     }
-  
+
+
+
     // update jump
     // check for jump
     if (playerAirFrame++ < 6)
@@ -461,7 +470,7 @@ function Update()
     {
         const segment1 = road[playerRoadSegment+i];                         
         randomSeed = SEED + playerRoadSegment + i;                // random seed for this segment
-        const lighting = Math.sin(segment1.a) * Math.cos(worldHeading)*99;   // calculate segment lighting
+        const lighting = Math.sin(segment1.ang) * Math.cos(worldHeading)*99;   // calculate segment lighting
         const p1 = segment1.p;                                               // projected point
         const p2 = segment2.p;                                               // last projected point
         
