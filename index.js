@@ -27,7 +27,6 @@ const playerSpringConstant = .01;    // spring players pitch
 const playerCollisionSlow = .1;      // slow down from collisions
 const pitchLerp = .1;                // speed that camera pitch changes
 const pitchSpringDamping = .9;       // dampen the pitch spring
-const elasticity = 1.2;              // bounce elasticity (2 is full bounce, 1 is none)
 const centrifugal = .002;            // how much to pull player on turns
 
 
@@ -137,9 +136,7 @@ let lastUpdate = 0;
 let timeBuffer = 0;
 
 /**
- * 最长的函数
- *
- * 是一个动画循环
+ * 动画循环
  */
 function Update()
 {
@@ -194,8 +191,9 @@ function Update()
     const playerRoadY = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].y, road[playerRoadSegment+1].y) + PLAYER_HEIGHT;
 
     const roadPitch   = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].a, road[playerRoadSegment+1].a);
-    
-    const playerVelocityLast = playerVelocity.Add(0);                      // save last velocity
+
+    // save last velocity
+    const playerVelocityLast = playerVelocity.copy();
 
 
     // 施加在 Y 轴上的重力
@@ -218,7 +216,8 @@ function Update()
         playerVelocity.z = aaa;
     }
 
-    playerPos = playerPos.Add(playerVelocity);                             // add player velocity
+    // add player velocity
+    playerPos.addVector(playerVelocity);
     
     const playerTurnAmount = Lerp(playerVelocity.z/playerMaxSpeed, mouseX * playerTurnControl, 0); // turning
 
@@ -237,10 +236,20 @@ function Update()
         // reset air grace frames
         playerAirFrame = 0;
 
-        playerVelocity = new Vector3(0, Math.cos(roadPitch), Math.sin(roadPitch))                 // get ground normal
-            .Multiply(-elasticity *                                                               // apply bounce
-               (Math.cos(roadPitch) * playerVelocity.y + Math.sin(roadPitch) * playerVelocity.z)) // dot of road and velocity
-            .Add(playerVelocity);                                                                 // add velocity
+        {
+            // get ground normal
+            let a = new Vector3(0, Math.cos(roadPitch), Math.sin(roadPitch));
+
+            let b = Math.cos(roadPitch) * playerVelocity.y + Math.sin(roadPitch) * playerVelocity.z;
+
+            // 弹跳
+            // bounce elasticity (2 is fnull bounce, 1 is none)
+            let c = -1.2 * b; // dot of road and velocity
+
+            a.multiply(c);
+
+            playerVelocity.addVector(a); // add velocity
+        }
 
 
         if (gBreakOn) {
@@ -413,8 +422,9 @@ function Update()
         // create road world position
         let p = new Vector3(                                                     // set road position
             x += w += road[playerRoadSegment+i].x,                               // sum local road offsets
-            road[playerRoadSegment+i].y, (playerRoadSegment+i)*roadSegmentLength)// road y and z pos
-                .Add(playerPos.Multiply(-1));                                    // subtract to get local space
+            road[playerRoadSegment+i].y, (playerRoadSegment+i)*roadSegmentLength);// road y and z pos
+
+        p.addVector(playerPos.Multiply(-1));              // subtract to get local space
 
         p.x = p.x*Math.cos(cameraHeading) - p.z*Math.sin(cameraHeading); // rotate camera heading
         
@@ -424,10 +434,19 @@ function Update()
         p.z = z;
         
         // project road segment to canvas space
-        road[playerRoadSegment+i++].p =                 // set projected road point
-            p.Multiply(new Vector3(z, z, 1))            // projection
-            .Multiply(projectScale)                     // scale
-            .Add(new Vector3(c.width/2,c.height/2, 0))  // center on canvas
+        {
+            let a = p.Multiply(new Vector3(z, z, 1));  // projection
+
+            let b = a.Multiply(projectScale);  // scale
+
+            let n = new Vector3(WIDTH/2, HEIGHT/2, 0);
+
+            // center on canvas
+            b.addVector(n);
+
+            // set projected road point
+            road[playerRoadSegment+i++].p = b;
+        }
     }
     
     // draw the road segments

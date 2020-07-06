@@ -111,6 +111,10 @@ const Random = (max=1, min=0) => {
  */
 class Vector3 
 {
+    x = 0;
+    y = 0;
+    z = 0;
+
     /**
      * 坐标必须明确给出
      */
@@ -120,16 +124,44 @@ class Vector3
         this.z = z;
     }
 
-	Add(v) {
-        v = isNaN(v) ? v : new Vector3(v,v,v);
+    copy () {
+        return new Vector3(this.x, this.y, this.z);
+    }
 
-        return new Vector3( this.x + v.x, this.y + v.y, this.z + v.z);
+    add (x, y, z) {
+        this.x += x;
+        this.y += y;
+        this.z += z;
+    }
+
+    addVector (v) {
+        if (!(v instanceof Vector3))
+            throw new Error('invalid v');
+
+        this.x += v.x;
+        this.y += v.y;
+        this.z += v.z;
     }
 
 	Multiply(v) {
         v = isNaN(v) ? v : new Vector3(v,v,v);
 
         return new Vector3( this.x * v.x, this.y * v.y, this.z * v.z);
+    }
+
+    multiplyVector (v) {
+        if (!(v instanceof Vector3))
+            throw new Error('invalid v');
+
+        this.x *= v.x;
+        this.y *= v.y;
+        this.z *= v.z;
+    }
+
+    multiply (n) {
+        this.x *= n;
+        this.y *= n;
+        this.z *= n;
     }
 }
     
