@@ -1,5 +1,6 @@
 'use strict';
 
+let gLighting = 0;
 const c = document.getElementById('c'); // <canvas>
 
 // FOV of camera (1 / Math.tan((fieldOfView/2) * Math.PI/180))
@@ -16,7 +17,6 @@ const drawDistance = 800;            // how many road segments to draw in front 
 const ROAD_SEGMENT_LENGTH = 100;       // length of each road segment
 const ROAD_WIDTH = 500;               // how wide is road
 const warningTrackWidth = 150;       // with of road plus warning track
-const dashLineWidth = 9;             // width of the dashed line in the road
 
 
 // player settings
@@ -30,7 +30,6 @@ const pitchSpringDamping = .9;       // dampen the pitch spring
 const centrifugal = .002;            // how much to pull player on turns
 
 
-const worldRotateScale = .00005;     // how much to rotate world around turns
     
 // level settings
 const ROAD_END = 10000;               // how many sections until end of the road
@@ -67,6 +66,29 @@ class RoadSeg {
         this.w = w;
     }
 }
+
+class RoadInfo {
+
+    // current player road segment
+    segIndex = 0;
+
+    // get player road segment
+    setPosition (z) {
+
+        this.segIndex = ( z / ROAD_SEGMENT_LENGTH )|0;
+    }
+
+    get roadSeg () {
+        return road[ this.segIndex ];
+    }
+
+    get nextRoadSeg () {
+        return road[ this.segIndex + 1 ];
+    }
+}
+
+
+const playerRoad = new RoadInfo;
 
 
 function StartLevel()
@@ -130,9 +152,11 @@ function StartLevel()
         
         // 让道路变得崎岖
         // road X
-        const x = Math.sin(i*roadGenWaveFrequencyX) * roadGenWaveScaleX;
+        //const x = Math.sin(i*roadGenWaveFrequencyX) * roadGenWaveScaleX;
         // road Y
-        const y = Math.sin(i*roadGenWaveFrequencyY) * roadGenWaveScaleY;
+        //const y = Math.sin(i*roadGenWaveFrequencyY) * roadGenWaveScaleY;
+        const x = 0;
+        const y = 0;
 
         let currentRoad;
 
@@ -186,10 +210,12 @@ function StartLevel()
     // set player pos
     playerPos = new Vector3(0, PLAYER_HEIGHT, 0);
 
+
     // randomize world heading
     worldHeading = randomSeed;
+    console.log(worldHeading);
 }
-    
+
 // 上次执行 update 的时间
 let lastUpdate = 0;
 // frame rate adjustment
@@ -241,18 +267,21 @@ function Update()
     // update player - controls and physics
     /////////////////////////////////////////////////////////////////////////////////////
     
-    // get player road segment
-    const playerRoadSegment        = playerPos.z/ROAD_SEGMENT_LENGTH|0;         // current player road segment 
-    const playerRoadSegmentPercent = playerPos.z/ROAD_SEGMENT_LENGTH%1;  // how far player is along current segment
+
+    playerRoad.setPosition( playerPos.z );
+
+    const playerRoadSegment = playerRoad.segIndex;
+    // how for player is along current segment
+    const playerRoadSegmentPercent = ( playerPos.z / ROAD_SEGMENT_LENGTH )%1;
     
     // get lerped values between last and current road segment
-    const playerRoadX = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].x, road[playerRoadSegment+1].x);
+    const playerRoadX = Lerp(playerRoadSegmentPercent, playerRoad.roadSeg.x, playerRoad.nextRoadSeg.x);
 
     // ground plane
-    const playerRoadY = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].y, road[playerRoadSegment+1].y) + PLAYER_HEIGHT;
+    const playerRoadY = Lerp(playerRoadSegmentPercent, playerRoad.roadSeg.y, playerRoad.nextRoadSeg.y) + PLAYER_HEIGHT;
 
     // 路的倾斜程度
-    const roadPitch = Lerp(playerRoadSegmentPercent, road[playerRoadSegment].ang, road[playerRoadSegment+1].ang);
+    const roadPitch = Lerp(playerRoadSegmentPercent, playerRoad.roadSeg.ang, playerRoad.nextRoadSeg.ang);
 
     // save last velocity
     const playerVelocityLast = playerVelocity.copy();
@@ -323,7 +352,7 @@ function Update()
 
         
         // check if off road
-        if (Math.abs(playerPos.x) > road[playerRoadSegment].w)
+        if (Math.abs(playerPos.x) > playerRoad.roadSeg.w)
         {
             // 离开道路时，车速降低
             // 离开道路时，阻尼（damping）增大
@@ -381,9 +410,15 @@ function Update()
     
     randomSeed = SEED;                   // set start seed
 
+    // how much to rotate world around turns
+    //const worldRotateScale = .00005;     
+    const worldRotateScale = .005;     
+
     // update world angle
-    worldHeading = ClampAngle(
-            worldHeading + playerVelocity.z * playerRoadX * worldRotateScale);
+    {
+        //const angle = worldHeading + playerVelocity.z * playerRoadX * worldRotateScale;
+        //worldHeading = ClampAngle( angle );
+    }
     
 
 
@@ -396,8 +431,9 @@ function Update()
     
     // 绘制天空
     //
-    // brightness from the sun
-    const lighting = Math.cos(worldHeading);
+    // brightness from the sun * 10
+    const lighting = Math.cos(worldHeading) * 10;
+    gLighting = lighting;
 
     // get horizon line
     // 基本上在画面高度的一半
@@ -575,12 +611,15 @@ function Update()
                 {
                     if (i < drawDistance/3) // make dashes and skip if far out
                     {
-                        const color = LSHA(70 + lighting);
+                        const L = 70 + lighting;
 
+                        const color = `hsl(0, 0%, ${L}%, 1)`;
+
+                        // dash line width is 9.
                         DrawPoly(
-                                p1.x, p1.y, p1.z*dashLineWidth,        // dash lines top
-                                p2.x, p2.y, p2.z*dashLineWidth,        // dash lines bottom
-                                color);                                // dash lines color
+                                p1.x, p1.y, p1.z * 90,        // dash lines top
+                                p2.x, p2.y, p2.z * 90,        // dash lines bottom
+                                color);                      // dash lines color
                     }
                 }
 

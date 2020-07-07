@@ -10,6 +10,8 @@ function HUD () {
     const objs = [];
     //objs.push(playerVelocity);
     //objs.push(timeBuffer);
+    objs.push(`world heading = ${worldHeading}`);
+    objs.push(gLighting);
 
     CTX.save();
     CTX.font = '2em"';

@@ -155,6 +155,10 @@ function DealKeyPush(key_code) {
         gBreakOn = 1;
     } else if (key_code === 13) {
         gState.add(JUMP);
+    } else if (key_code === 49) {  // 1 
+        worldHeading --;
+    } else if (key_code === 50) {  // 2
+        worldHeading ++;
     }
     // else ...
 }
