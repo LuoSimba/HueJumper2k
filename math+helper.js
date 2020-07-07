@@ -107,6 +107,8 @@ const Random = (max=1, min=0) => {
    
 /**
  * simple 3d vector class
+ *
+ * vector 向量
  */
 class Vector3 
 {

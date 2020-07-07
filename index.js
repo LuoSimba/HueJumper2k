@@ -3,6 +3,7 @@
 
 
 
+
 let gLighting = 0;
 const c = document.getElementById('c'); // <canvas>
 
@@ -26,9 +27,9 @@ const PLAYER_HEIGHT = 150;            // how high is player above ground
 const MAX_SPEED = 300;          // limit max player speed
 const playerTurnControl = .2;        // player turning rate
 const playerSpringConstant = .01;    // spring players pitch
-const playerCollisionSlow = .1;      // slow down from collisions
 const pitchLerp = .1;                // speed that camera pitch changes
 const pitchSpringDamping = .9;       // dampen the pitch spring
+
 const centrifugal = .002;            // how much to pull player on turns
 
 
@@ -440,8 +441,8 @@ function Update()
     // 绘制天空
     //
     // brightness from the sun * 10
-    const lighting = Math.cos(worldHeading) * 10;
-    gLighting = lighting;
+    const lightinG = Math.cos(worldHeading) * 10;
+    gLighting = lightinG;
 
     // get horizon line
     // 基本上在画面高度的一半
@@ -451,9 +452,9 @@ function Update()
     // 使用线性渐变作为天空的颜色
     const g = CTX.createLinearGradient(0, horizon- HEIGHT / 2, 0, horizon);
     // top sky color
-    g.addColorStop( 0, LSHA(39+lighting*25,49+lighting*19,230-lighting*19));
+    g.addColorStop( 0, LSHA(39+lightinG*25,49+lightinG*19,230-lightinG*19));
     // bottom sky color
-    g.addColorStop( 1, LSHA(5,79,250-lighting*9));
+    g.addColorStop( 1, LSHA(5,79,250-lightinG*9));
 
     // draw sky
     DrawRect(0, 0, WIDTH, HEIGHT, g);
@@ -505,7 +506,7 @@ function Update()
     for(let i = 30; i--; )  
     {
         const angle = ClampAngle(worldHeading+Random(19));           // mountain random angle
-        const lighting = Math.cos(angle-worldHeading);               // mountain lighting
+        const lighting0 = Math.cos(angle-worldHeading);               // mountain lighting0
 
         // mountain x pos, move far away for wrap
         const x = c.width * (.5+Lerp(angle/Math.PI/2+.5, 4, -4)-cameraOffset);
@@ -518,7 +519,7 @@ function Update()
                 x, y, w,
                 x+w*Random(-.5,.5),                                                 // random tip skew
                 y - Random(.5,.8)*w, 0,                                             // mountain height
-                LSHA(Random(15,25)+i/3-lighting*9,i/2+Random(19),Random(220,230))); // mountain color
+                LSHA(Random(15,25)+i/3-lighting0*9,i/2+Random(19),Random(220,230))); // mountain color
     }
 
     
@@ -583,7 +584,7 @@ function Update()
     {
         const segment1 = playerRoad.Segment(i);                         
         randomSeed = SEED + playerRoad.Index(i);                // random seed for this segment
-        const lighting = Math.sin(segment1.ang) * Math.cos(worldHeading)*99;   // calculate segment lighting
+        const lighting2 = Math.sin(segment1.ang) * Math.cos(worldHeading)*99;   // calculate segment lighting2
         const p1 = segment1.p;                                               // projected point
         const p2 = segment2.p;                                               // last projected point
         
@@ -593,7 +594,7 @@ function Update()
             if (i % (Lerp(i/drawDistance,1,9)|0) == 0)                       // fade in road resolution
             {
 
-                const color = `hsl(95,30%,${25 + lighting}%)`;
+                const color = `hsl(95,30%,${25 + lighting2}%)`;
 
                 DrawPoly(
                         WIDTH / 2, p1.y, WIDTH / 2,
@@ -601,7 +602,7 @@ function Update()
                         color);
 
                 {
-                    const color2 = `hsl(0, 0%, ${ 7 + lighting }%)`;
+                    const color2 = `hsl(0, 0%, ${ 7 + lighting2 }%)`;
                     // 绘制路面
                     DrawPoly(
                             p1.x, p1.y, p1.z*segment1.w,      // road top
@@ -612,45 +613,73 @@ function Update()
                 segment2 = segment1;                                                // prep for next segment
             }
 
-            // random object (tree or rock)
-            if (Random()<.2 && playerRoad.Index(i) > 29)                           // check for road object
+            // 随机生成障碍物 (树或者岩石)
+            // check for road object
+            if (Random()<.2)
             {
                 // player object collision check
+                // 碰撞检测
                 const z = playerRoad.Index(i) * ROAD_SEGMENT_LENGTH;            // segment distance
                 const height = (Random(2)|0) * 400;                              // object type & height
                 const x = 2 * ROAD_WIDTH * Random(10,-10) * Random(9);                    // choose object pos
-                if (!segment1.h                                                  // prevent hitting the same object
-                    && Math.abs(playerPos.x - x) < 200                           // x collision
-                    && Math.abs(playerPos.z - z) < 200                           // z collision
-                    && playerPos.y- PLAYER_HEIGHT < segment1.y+200+height)         // y collision + object height
-                {
-                    segment1.h = playerCollisionSlow;
 
-                    playerVelocity.multiply(segment1.h); // stop player and mark hit
+                if (
+                        // prevent hitting the same object
+                        !segment1.hit
+                        // x collision
+                        && Math.abs(playerPos.x - x) < 200
+                        // z collision
+                        && Math.abs(playerPos.z - z) < 200
+                        // y collision + object height
+                        && playerPos.y- PLAYER_HEIGHT < segment1.y+200+height
+                   )
+                {
+                    // 碰撞减速
+                    segment1.hit = true;
+
+                    // stop player and mark hit
+                    playerVelocity.multiply(0.1);
                 }
 
                 // draw road object
-                const alpha = Lerp(i/drawDistance, 4, 0);                        // fade in object alpha
-                if (height)                                                      // tree           
+
+                // object alpha is [0,4]
+                const alpha = Lerp(i/drawDistance, 4, 0);
+
+                // tree
+                if (height)
                 {
                     const x1 = p1.x + p1.z * x;
 
-                    DrawPoly(x1, p1.y, p1.z*29,                   // trunk bottom
-                        x1, p1.y-99*p1.z, p1.z*29,                                // trunk top
-                        LSHA(5+Random(9), 50+Random(9), 29+Random(9), alpha));   // trunk color
+                    const color_trunk = `hsl(35,56%,10%,${alpha})`;
 
-                    DrawPoly(x1, p1.y-Random(50,99)*p1.z, p1.z*Random(199,250),   // leaves bottom
-                        x1, p1.y-Random(600,800)*p1.z, 0,                         // leaves top
-                        LSHA(25+Random(9), 80+Random(9), 9+Random(29), alpha));  // leaves color
+                    DrawPoly(
+                            x1, p1.y, p1.z*29,                   // trunk bottom
+                            x1, p1.y-99*p1.z, p1.z*29,           // trunk top
+                            color_trunk);
+
+                    const color_leaves = `hsl(9, 85%, 35%, ${alpha})`;
+
+                    DrawPoly(
+                            x1, p1.y-Random(50,99)*p1.z, p1.z*Random(199,250),   // leaves bottom
+                            x1, p1.y-Random(600,800)*p1.z, 0,                         // leaves top
+                            color_leaves);
                 }
-                else                                                                           // rock
+                // rock
+                else
                 {
                     const x1 = p1.x + p1.z * x;
                     const x2 = x1 + p1.z * (Random(99, -99));
 
-                    DrawPoly(x1, p1.y, p1.z*Random(200,250),                    // rock bottom
-                        x2, p1.y-Random(200,250)*p1.z, p1.z*Random(99),   // rock top
-                        LSHA(50+Random(19), 25+Random(19), 209+Random(9), alpha));             // rock color
+                    const wid2 = Random(200, 250);
+                    const wid0 = Random(99);
+
+                    const color = LSHA(50+Random(19), 25+Random(19), 209+Random(9), alpha);
+
+                    DrawPoly(
+                            x1, p1.y, p1.z * wid2,                    // rock bottom
+                            x2, p1.y-Random(200,250)*p1.z, p1.z*wid0,   // rock top
+                            color);
                 }
             }
         }
