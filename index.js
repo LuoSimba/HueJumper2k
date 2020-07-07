@@ -2,6 +2,7 @@
 
 
 
+
 let gLighting = 0;
 const c = document.getElementById('c'); // <canvas>
 
@@ -161,11 +162,9 @@ function StartLevel()
         
         // 让道路变得崎岖
         // road X
-        //const x = Math.sin(i*roadGenWaveFrequencyX) * roadGenWaveScaleX;
+        const x = Math.sin(i*roadGenWaveFrequencyX) * roadGenWaveScaleX;
         // road Y
-        //const y = Math.sin(i*roadGenWaveFrequencyY) * roadGenWaveScaleY;
-        const x = 0;
-        const y = 0;
+        const y = Math.sin(i*roadGenWaveFrequencyY) * roadGenWaveScaleY;
 
         let currentRoad;
 
@@ -593,9 +592,13 @@ function Update()
             // draw road segment
             if (i % (Lerp(i/drawDistance,1,9)|0) == 0)                       // fade in road resolution
             {
-                // ground
-                DrawPoly(c.width/2, p1.y, c.width/2, c.width/2, p2.y, c.width/2,    // ground top & bottom
-                    LSHA(25+lighting, 30, 95));                                     // ground color
+
+                const color = `hsl(95,30%,${25 + lighting}%)`;
+
+                DrawPoly(
+                        WIDTH / 2, p1.y, WIDTH / 2,
+                        WIDTH / 2, p2.y, WIDTH / 2,
+                        color);
 
                 {
                     const color2 = `hsl(0, 0%, ${ 7 + lighting }%)`;
@@ -657,18 +660,12 @@ function Update()
     // 计算帧率
     UpdateFps();
     
-    /////////////////////////////////////////////////////////////////////////////////////
     // 显示各项数据
-    /////////////////////////////////////////////////////////////////////////////////////
     HUD();
     
     requestAnimationFrame(Update);
 }
     
-    
-/////////////////////////////////////////////////////////////////////////////////////
-// init hue(color) jumper
-/////////////////////////////////////////////////////////////////////////////////////
    
 // startup and kick off update loop
 StartLevel();
