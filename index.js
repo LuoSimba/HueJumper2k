@@ -1,5 +1,9 @@
 'use strict';
 
+
+
+
+
 let gLighting = 0;
 const c = document.getElementById('c'); // <canvas>
 
@@ -70,20 +74,28 @@ class RoadSeg {
 class RoadInfo {
 
     // current player road segment
-    segIndex = 0;
+    _index = 0;
 
     // get player road segment
     setPosition (z) {
 
-        this.segIndex = ( z / ROAD_SEGMENT_LENGTH )|0;
+        this._index = ( z / ROAD_SEGMENT_LENGTH )|0;
     }
 
     get roadSeg () {
-        return road[ this.segIndex ];
+        return road[ this._index ];
     }
 
     get nextRoadSeg () {
-        return road[ this.segIndex + 1 ];
+        return road[ this._index + 1 ];
+    }
+
+    Index (offset = 0) {
+        return this._index + offset;
+    }
+
+    Segment (offset = 0) {
+        return road[ this.Index(offset) ];
     }
 }
 
@@ -270,7 +282,7 @@ function Update()
 
     playerRoad.setPosition( playerPos.z );
 
-    const playerRoadSegment = playerRoad.segIndex;
+    const playerRoadSegment = playerRoad.Index(0);
     // how for player is along current segment
     const playerRoadSegmentPercent = ( playerPos.z / ROAD_SEGMENT_LENGTH )%1;
     
@@ -535,8 +547,9 @@ function Update()
         {
             // create road world position
             let p = new Vector3(                                                     // set road position
-                x += w += road[playerRoadSegment+i].x,                               // sum local road offsets
-                road[playerRoadSegment+i].y, (playerRoadSegment+i)*ROAD_SEGMENT_LENGTH);// road y and z pos
+                x += w += playerRoad.Segment(i).x,                               // sum local road offsets
+                playerRoad.Segment(i).y,
+                playerRoad.Index(i) * ROAD_SEGMENT_LENGTH);// road y and z pos
 
             {
                 let a = playerPos.copy();
@@ -569,11 +582,11 @@ function Update()
     }
     
     // draw the road segments
-    let segment2 = road[playerRoadSegment+drawDistance];                     // store the last segment
+    let segment2 = playerRoad.Segment(drawDistance);                     // store the last segment
     for( let i = drawDistance; i--; )                                            // iterate in reverse
     {
-        const segment1 = road[playerRoadSegment+i];                         
-        randomSeed = SEED + playerRoadSegment + i;                // random seed for this segment
+        const segment1 = playerRoad.Segment(i);                         
+        randomSeed = SEED + playerRoad.Index(i);                // random seed for this segment
         const lighting = Math.sin(segment1.ang) * Math.cos(worldHeading)*99;   // calculate segment lighting
         const p1 = segment1.p;                                               // projected point
         const p2 = segment2.p;                                               // last projected point
@@ -589,12 +602,30 @@ function Update()
 
                 // warning track
                 if (segment1.w > 400)                                               // no warning track if thin
-                    DrawPoly(p1.x, p1.y, p1.z*(segment1.w+warningTrackWidth),       // warning track top
-                        p2.x, p2.y, p2.z*(segment2.w+warningTrackWidth),            // warning track bottom
-                        LSHA(((playerRoadSegment+i)%19<9? 50: 20)+lighting));       // warning track stripe color
+                {
+                    // warning track stripe color
+
+                    let idx = playerRoad.Index(i);
+                    let L;
+
+                    if (idx % 19 < 9) {
+                        L = 50;
+                    } else {
+                        L = 20;
+                    }
+
+                    L += lighting;
+
+                    const color = LSHA(L);
+
+                    DrawPoly(
+                            p1.x, p1.y, p1.z*(segment1.w+warningTrackWidth),       // warning track top
+                            p2.x, p2.y, p2.z*(segment2.w+warningTrackWidth),            // warning track bottom
+                            color);
+                }
                 
                 // road
-                const z = (playerRoadSegment+i)*ROAD_SEGMENT_LENGTH;                  // segment distance
+                const z = playerRoad.Index(i) * ROAD_SEGMENT_LENGTH;              // segment distance
                 // TODO delete z
 
                 {
@@ -606,31 +637,14 @@ function Update()
                             color2); 
                 }
                     
-                // dashed lines
-                if ( (playerRoadSegment+i) % 9 == 0 )
-                {
-                    if (i < drawDistance/3) // make dashes and skip if far out
-                    {
-                        const L = 70 + lighting;
-
-                        const color = `hsl(0, 0%, ${L}%, 1)`;
-
-                        // dash line width is 9.
-                        DrawPoly(
-                                p1.x, p1.y, p1.z * 90,        // dash lines top
-                                p2.x, p2.y, p2.z * 90,        // dash lines bottom
-                                color);                      // dash lines color
-                    }
-                }
-
                 segment2 = segment1;                                                // prep for next segment
             }
 
             // random object (tree or rock)
-            if (Random()<.2 && playerRoadSegment+i>29)                           // check for road object
+            if (Random()<.2 && playerRoad.Index(i) > 29)                           // check for road object
             {
                 // player object collision check
-                const z = (playerRoadSegment+i)*ROAD_SEGMENT_LENGTH;               // segment distance
+                const z = playerRoad.Index(i) * ROAD_SEGMENT_LENGTH;            // segment distance
                 const height = (Random(2)|0) * 400;                              // object type & height
                 const x = 2 * ROAD_WIDTH * Random(10,-10) * Random(9);                    // choose object pos
                 if (!segment1.h                                                  // prevent hitting the same object
