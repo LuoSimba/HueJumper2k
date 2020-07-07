@@ -10,7 +10,6 @@ function HUD () {
     const objs = [];
     //objs.push(playerVelocity);
     //objs.push(timeBuffer);
-    objs.push(mouseUpFrames);
 
     CTX.save();
     CTX.font = '2em"';

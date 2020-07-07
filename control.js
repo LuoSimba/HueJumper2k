@@ -33,7 +33,6 @@ document.onpointerlockerror = function (e) {
 
 let gBreakOn        = 0; // 刹车
 let IsGameStart     = 0;
-let mouseUpFrames   = 0;
 let mouseX          = 0;
 let gSteerX         = 0; // 方向
 let touchMode       = 0;
@@ -103,15 +102,19 @@ const CTRL_STEER = function (e) {
 // keyboard control
 /////////////////////////////////////////////////////////////////////////////////////
 
+const JUMP = Symbol('JUMP');
+
+const gState = new Set;
+
 
 (function () {
-    const gKeyState = new Set;
+    const _keystat = new Set;
 
     const _KEYUP = function (e) {
 
-        if (gKeyState.has(e.keyCode)) 
+        if (_keystat.has(e.keyCode)) 
         {
-            gKeyState.delete(e.keyCode);
+            _keystat.delete(e.keyCode);
 
             DealKeyRelease(e.keyCode);
         }
@@ -119,13 +122,13 @@ const CTRL_STEER = function (e) {
 
     const _KEYDOWN = function (e) {
         // 如果已经是按下状态，什么也不做
-        if (gKeyState.has(e.keyCode))
+        if (_keystat.has(e.keyCode))
         {
             // do nothing
         }
         else 
         {
-            gKeyState.add(e.keyCode);
+            _keystat.add(e.keyCode);
 
             DealKeyPush(e.keyCode);
         }
@@ -150,6 +153,8 @@ function DealKeyPush(key_code) {
         StartLevel(); 
     } else if (key_code === 32) { // Space: brake
         gBreakOn = 1;
+    } else if (key_code === 13) {
+        gState.add(JUMP);
     }
     // else ...
 }

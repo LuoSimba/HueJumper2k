@@ -1,5 +1,5 @@
 'use strict';
-    
+
 const c = document.getElementById('c'); // <canvas>
 
 const WIDTH  = 700;
@@ -19,7 +19,6 @@ const dashLineWidth = 9;             // width of the dashed line in the road
 const PLAYER_HEIGHT = 150;            // how high is player above ground
 const MAX_SPEED = 300;          // limit max player speed
 const playerTurnControl = .2;        // player turning rate
-const playerJumpSpeed = 25;          // z speed added for jump
 const playerSpringConstant = .01;    // spring players pitch
 const playerCollisionSlow = .1;      // slow down from collisions
 const pitchLerp = .1;                // speed that camera pitch changes
@@ -330,27 +329,31 @@ function Update()
             playerPitchSpring += Math.sin(playerPos.z/99) ** 4 / 99;
         }
     }
+    // in air
+    else {
+        playerAirFrame ++;
+    }
 
 
 
     // update jump
     // check for jump
-    if (playerAirFrame++ < 6)
+    //
+    if (gState.has(JUMP))
     {
-        if (gBreakOn) {
-            if (mouseUpFrames && mouseUpFrames < 9) {
-                playerVelocity.y += playerJumpSpeed;       // apply jump velocity
-                playerAirFrame = 9;                        // prevent jumping again
-            }
+        gState.delete(JUMP);
+
+        // 赛车在空中停留了几帧？
+        if (playerAirFrame < 7)
+        {
+            console.log('JUMP ok', playerAirFrame);
+
+            // z speed added for jump
+            playerVelocity.y += 25;       // apply jump velocity
+            playerAirFrame = 9;           // prevent jumping again
         }
     }
 
-    // update mouse up frames for double click
-    if (gBreakOn) {
-        mouseUpFrames = 0;
-    } else {
-        mouseUpFrames ++;
-    }
 
     const airPercent = (playerPos.y-playerRoadY)/99;                                  // calculate above ground percent
     playerPitchSpringVelocity += Lerp(airPercent,0,playerVelocity.y/4e4);             // pitch down with vertical velocity
