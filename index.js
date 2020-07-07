@@ -2,8 +2,6 @@
 
 
 
-
-
 let gLighting = 0;
 const c = document.getElementById('c'); // <canvas>
 
@@ -20,7 +18,6 @@ projectScale.multiply(WIDTH / 2 / CAMERA_DEPTH);
 const drawDistance = 800;            // how many road segments to draw in front of player
 const ROAD_SEGMENT_LENGTH = 100;       // length of each road segment
 const ROAD_WIDTH = 500;               // how wide is road
-const warningTrackWidth = 150;       // with of road plus warning track
 
 
 // player settings
@@ -600,37 +597,9 @@ function Update()
                 DrawPoly(c.width/2, p1.y, c.width/2, c.width/2, p2.y, c.width/2,    // ground top & bottom
                     LSHA(25+lighting, 30, 95));                                     // ground color
 
-                // warning track
-                if (segment1.w > 400)                                               // no warning track if thin
-                {
-                    // warning track stripe color
-
-                    let idx = playerRoad.Index(i);
-                    let L;
-
-                    if (idx % 19 < 9) {
-                        L = 50;
-                    } else {
-                        L = 20;
-                    }
-
-                    L += lighting;
-
-                    const color = LSHA(L);
-
-                    DrawPoly(
-                            p1.x, p1.y, p1.z*(segment1.w+warningTrackWidth),       // warning track top
-                            p2.x, p2.y, p2.z*(segment2.w+warningTrackWidth),            // warning track bottom
-                            color);
-                }
-                
-                // road
-                const z = playerRoad.Index(i) * ROAD_SEGMENT_LENGTH;              // segment distance
-                // TODO delete z
-
                 {
                     const color2 = `hsl(0, 0%, ${ 7 + lighting }%)`;
-
+                    // 绘制路面
                     DrawPoly(
                             p1.x, p1.y, p1.z*segment1.w,      // road top
                             p2.x, p2.y, p2.z*segment2.w,      // road bottom
